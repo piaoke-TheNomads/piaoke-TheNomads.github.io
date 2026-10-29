@@ -68,10 +68,14 @@ const isRetired = player.status === "retired";
               <th scope="row">号码</th>
               <td class="num">{player.number}</td>
             </tr>
-            <tr>
-              <th scope="row">状态</th>
-              <td>{status ?? "待确认"}</td>
-            </tr>
+            {
+              status ? (
+                <tr>
+                  <th scope="row">状态</th>
+                  <td>{status}</td>
+                </tr>
+              ) : null
+            }
             <tr>
               <th scope="row">位置</th>
               <td>{pos ?? "—"}</td>

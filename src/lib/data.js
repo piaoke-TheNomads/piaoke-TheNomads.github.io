@@ -36,7 +36,7 @@ const byNumber = (a, b) => {
 
 export const roster = [...players.players].sort(byNumber);
 
-/** 分三组：现役、退役、待确认。组内保持号码顺序。 */
+/** 按状态取子集，组内保持号码顺序。status 为 null 的表示尚未确认。 */
 export const activeRoster = roster.filter((p) => p.status === "active");
 export const retiredRoster = roster.filter((p) => p.status === "retired");
 export const pendingRoster = roster.filter((p) => !p.status);
