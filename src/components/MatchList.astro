@@ -16,7 +16,7 @@ const competitions = [...new Set(matches.map((match) => match.competition))];
   </form>
   <p class="match-count" aria-live="polite" data-match-count>{matches.length ? `共 ${matches.length} 场比赛` : ""}</p>
   <div class="match-list">{matches.map((match) => <MatchCard match={match} showSeason={!season} />)}</div>
-  <p class="match-empty" data-match-empty hidden={matches.length > 0}>{matches.length ? "没有符合筛选条件的比赛。" : "尚未收录逐场比赛。"}</p>
+  <p class="match-empty" data-match-empty hidden={matches.length > 0}>{matches.length ? "没有符合筛选条件的比赛。" : "暂无逐场比赛记录。"}</p>
 </div>
 <script>
   import { filterMatches } from "../lib/matches.js";

@@ -42,7 +42,7 @@ const isRetired = player.status === "retired";
           <h1>{player.name}</h1>
           <p class="player-head__tags">
             {status ? <span class="tag" data-status={player.status}>{status}</span> : null}
-            {pos ? <span class="label">{pos}</span> : <span class="label">位置待补</span>}
+            {pos && <span class="label">{pos}</span>}
           </p>
         </div>
       </div>
@@ -64,7 +64,7 @@ const isRetired = player.status === "retired";
       <div style="grid-column: 7 / span 6" class="stack">
         {
           player.joined ? (
-            <p class="player__joined">加入球队 {player.joined} 年</p>
+            <p class="player__joined">{player.joined} 年加入球队</p>
           ) : null
         }
 

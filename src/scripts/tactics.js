@@ -373,7 +373,7 @@ function initialize() {
     if (action === 'import') $('[data-import-file]').click();
     if (action === 'remove') removeSelected();
     if (action === 'cancel-selection') { selectedId = null; render(); }
-    if (action === 'reset') change(() => { current().placements = defaultPlacements(players, current().formation); selectedId = null; }, '当前方案已恢复默认阵型，可撤销');
+    if (action === 'reset') change(() => { current().placements = defaultPlacements(players, current().formation); selectedId = null; }, '已套用默认首发，可撤销');
     if (action === 'delete') {
       const name = current().name;
       change(() => {

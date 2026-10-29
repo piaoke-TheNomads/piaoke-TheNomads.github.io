@@ -17,7 +17,6 @@ import {
 
 const preview = activeRoster.slice(0, 12);
 const rest = activeRoster.length - preview.length;
-const latest = seasonsList[0];
 ---
 
 <Base active="home" image="/photos/image1-1600.webp">
@@ -44,7 +43,7 @@ const latest = seasonsList[0];
           </div>
           <div>
             <p class="lede">
-              {site.school}足球队，{site.est} 年成立，参加{site.league}。
+              {site.est} 年成立于{site.school}，参加{site.league}。
             </p>
           </div>
         </div>
@@ -63,12 +62,7 @@ const latest = seasonsList[0];
         </div>
         <div style="grid-column: 7 / span 6" class="prose">
           <p>
-            {site.name} 2022
-            年成立于{site.school}。第一年就拿下常规赛与季后赛双冠，之后连续三个赛季留在前四，
-            2025-26 赛季重新拿回冠军。
-          </p>
-          <p>
-            队徽上的 {stats.stars} 颗星对应 <em>2022-23</em> 与 <em>2025-26</em> 两个冠军赛季。
+            2022-23 赛季获得常规赛与季后赛冠军，2025-26 赛季获得冠军。
           </p>
           <p style="margin-top:22px">
             <a class="btn" href="/about">关于球队 →</a>
@@ -140,9 +134,9 @@ const latest = seasonsList[0];
       <div class="feature-callout">
         <div>
           <p class="label">Tactics · 战术板</p>
-          <h2 style="margin-top:10px">排一套八人制站位</h2>
+          <h2 style="margin-top:10px">八人制战术板</h2>
           <p class="lede" style="margin-top:12px">
-            拖动球员棋子安排八人制站位，保存多套阵容，导出图片与队友分享。
+            安排球员站位，标注跑位与传球，保存方案或导出图片。
           </p>
         </div>
         <a class="btn btn--solid" href="/tactics">打开战术板 →</a>
@@ -178,7 +172,7 @@ const latest = seasonsList[0];
         rest > 0 && (
           <p style="margin-top:18px">
             <a class="section__more" href="/squad">
-              还有 {rest} 人 →
+              其余 {rest} 名球员 →
             </a>
           </p>
         )
@@ -207,7 +201,7 @@ const latest = seasonsList[0];
             height="1200"
             loading="lazy"
           />
-          <figcaption>赛后 · 草地上 · 99/88/77/66/55</figcaption>
+          <figcaption>草地合影 · 99/88/77/66/55</figcaption>
         </figure>
         <figure class="figure">
           <img
@@ -219,7 +213,7 @@ const latest = seasonsList[0];
             height="1472"
             loading="lazy"
           />
-          <figcaption>捧杯 · {latest.label}</figcaption>
+          <figcaption>捧杯</figcaption>
         </figure>
         <figure class="figure">
           <img

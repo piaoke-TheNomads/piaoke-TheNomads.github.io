@@ -121,14 +121,42 @@ test('formation changes retain an advanced keeper, keep a vacant keeper slot, an
 });
 
 
-test('2-4-1 uses the same eight players, with number 9 as the lone striker', () => {
+test('default 2-4-1 follows its own agreed players and exact screenshot positions', () => {
   const lineup = defaultPlacements(players, '2-4-1');
-  assert.deepEqual(lineup.map((p) => players.find((player) => player.id === p.playerId).number), [6, 10, 25, 60, 88, 22, 11, 9]);
-  assert.equal(lineup.filter((p) => p.x === 27).length, 2);
-  assert.equal(lineup.filter((p) => p.x === 52).length, 4);
-  assert.deepEqual(lineup[7], { playerId: players.find((p) => p.number === 9).id, x: 78, y: 50 });
-  assert.deepEqual(applyFormation(defaultPlacements(players), '2-4-1', players), lineup);
-  assert.deepEqual(applyFormation(lineup, '3-2-2', players), defaultPlacements(players));
+  assert.deepEqual(lineup.map((p) => players.find((player) => player.id === p.playerId).number), [6, 22, 25, 99, 88, 10, 60, 9]);
+  assert.deepEqual(lineup.map(({ x, y }) => [x, y]), [[8, 50], [27, 32], [27, 68], [52, 18], [52, 39], [52, 61], [52, 82], [78, 50]]);
+  const renumbered = players.map((p) => ({ ...p, number: p.number + 100 }));
+  assert.deepEqual(defaultPlacements(renumbered, '2-4-1'), lineup);
+  const plan = makePlan('241首发', lineup, '2-4-1');
+  assert.deepEqual(plan.annotations, []);
+  assert.equal(plan.ball, null);
+});
+
+test('switching 3-2-2 and 2-4-1 shapes preserves the current players rather than applying another starting lineup', () => {
+  const default322 = defaultPlacements(players), default241 = defaultPlacements(players, '2-4-1');
+  const ids = (placements) => placements.map((p) => p.playerId).sort();
+  const number11 = players.find((p) => p.number === 11).id, number99 = players.find((p) => p.number === 99).id;
+  const shape241 = applyFormation(default322, '2-4-1', players);
+  assert.deepEqual(ids(shape241), ids(default322));
+  assert.ok(shape241.some((p) => p.playerId === number11));
+  assert.ok(!shape241.some((p) => p.playerId === number99));
+  assert.notDeepEqual(ids(shape241), ids(default241));
+  const shape322 = applyFormation(default241, '3-2-2', players);
+  assert.deepEqual(ids(shape322), ids(default241));
+  assert.ok(shape322.some((p) => p.playerId === number99));
+  assert.ok(!shape322.some((p) => p.playerId === number11));
+  assert.deepEqual(ids(applyFormation(shape241, '3-2-2', players)), ids(default322));
+  assert.deepEqual(ids(applyFormation(shape322, '2-4-1', players)), ids(default241));
+});
+
+test('loading a previous 2-4-1 plan preserves its older lineup and custom positions', () => {
+  const priorOrder = [6, 10, 25, 60, 88, 22, 11, 9];
+  const placements = priorOrder.map((number, index) => ({ playerId: players.find((p) => p.number === number).id, x: 10 + index * 9, y: 21 + index * 4 }));
+  const plan = makePlan('原有241', placements, '2-4-1');
+  const library = { version: 3, activeId: plan.id, plans: [plan] };
+  const restored = sanitizeLibrary(library, players);
+  assert.equal(restored.repairs, 0);
+  assert.deepEqual(restored.library.plans[0].placements, placements);
 });
 
 test('missing preset players are replaced without disturbing remaining requested players', () => {

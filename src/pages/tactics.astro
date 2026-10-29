@@ -23,7 +23,7 @@ const players = activeRoster.map((p) => ({ id: p.id, number: p.number, name: p.n
       </div>
       <div class="tactics-controls">
         <label class="tactics-select-label">阵型<select data-formation aria-label="阵型模板"><option value="3-2-2">3–2–2</option><option value="2-4-1">2–4–1</option></select></label>
-        <button type="button" data-action="reset">恢复默认阵型</button>
+        <button type="button" data-action="reset">套用默认首发</button>
         <button type="button" data-action="undo" disabled>撤销</button>
         <span class="tactics-count" data-count>场上 0 / 8</span>
       </div>
@@ -89,7 +89,16 @@ const players = activeRoster.map((p) => ({ id: p.id, number: p.number, name: p.n
         <input type="file" accept=".json,application/json" data-import-file hidden />
       </div>
       <p class="tactics-footnote">方案仅保存在本机的当前浏览器。导出备份后，可在其他设备导入并继续编辑。</p>
-      <details class="tactics-help" id="tactics-help"><summary>操作说明</summary><p>拖动队员到球场，覆盖另一名队员可换人或换位。也可先选择替补，再点击场上位置。选中场上队员后，方向键微调站位，Delete 键下场；Shift + 方向键加快移动。切换阵型保留当前队员，恢复默认阵型会按所选阵型重新选人。跑位箭头和传球线可拖动画出，也可依次点击起点和终点；按 Esc 取消。使用橡皮擦删除线条或足球，清空标记不影响队员站位。标记会随方案保存，并包含在导出的图片和备份中。</p></details>
+      <details class="tactics-help" id="tactics-help">
+        <summary>操作说明</summary>
+        <ul>
+          <li>拖动队员调整站位，覆盖另一名队员可换人或换位。也可先选择替补，再点击场上位置。</li>
+          <li>切换阵型会调整站位并保留当前队员；“套用默认首发”会换入该阵型的默认队员。</li>
+          <li>跑位箭头和传球线可拖动画出，也可依次点击起点和终点。按 Esc 取消绘制。</li>
+          <li>选择“足球”后点击球场放置，切回“移动”可拖动足球。橡皮擦可删除线条或足球，“清空标记”保留队员站位。</li>
+          <li>选中队员或足球后，用方向键微调，Shift + 方向键加快移动，Delete 移除。改动可撤销，标记会随方案、图片和备份保存。</li>
+        </ul>
+      </details>
     </div>
   </section>
   <dialog class="tactics-dialog" data-name-dialog aria-labelledby="plan-dialog-title">

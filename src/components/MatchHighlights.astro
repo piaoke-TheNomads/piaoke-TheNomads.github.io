@@ -10,8 +10,8 @@ import "../styles/matches.css";
       <a class="section__more" href="/matches">全部比赛 →</a>
     </div>
     <div class="match-highlights">
-      <div><h3>下一场比赛</h3><div data-next-match><p class="match-empty">{matches.length ? "比赛安排见全部比赛。" : "暂无已确认的后续赛程。"}</p></div></div>
-      <div><h3>最近赛果</h3><div data-latest-match><p class="match-empty">{matches.length ? "赛果见全部比赛。" : "尚未收录逐场赛果。"}</p></div></div>
+      <div><h3>下一场比赛</h3><div data-next-match><p class="match-empty">{matches.length ? "赛程见比赛页。" : "暂无后续赛程信息。"}</p></div></div>
+      <div><h3>最近赛果</h3><div data-latest-match><p class="match-empty">{matches.length ? "赛果见比赛页。" : "暂无最近赛果信息。"}</p></div></div>
     </div>
     <script type="application/json" data-highlight-records set:html={JSON.stringify(matches).replaceAll("<", "\\u003c")} />
     {matches.map((match) => <template data-highlight-template={match.id}><MatchCard match={match} /></template>)}
@@ -25,8 +25,8 @@ import "../styles/matches.css";
     const templates = new Map([...section.querySelectorAll<HTMLTemplateElement>("[data-highlight-template]")].map((template) => [template.dataset.highlightTemplate, template]));
     const update = () => {
       for (const [selector, match, message] of [
-        ["[data-next-match]", nextMatch(records), "暂无已确认的后续赛程。"],
-        ["[data-latest-match]", latestResult(records), "尚未收录有日期的逐场赛果。"],
+        ["[data-next-match]", nextMatch(records), "暂无后续赛程信息。"],
+        ["[data-latest-match]", latestResult(records), "暂无最近赛果信息。"],
       ] as const) {
         const target = section.querySelector<HTMLElement>(selector);
         if (!target) continue;

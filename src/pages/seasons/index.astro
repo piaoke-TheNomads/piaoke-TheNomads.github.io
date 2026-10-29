@@ -4,6 +4,8 @@ import { seasonsList, stats } from "../../lib/data";
 import { matches } from "../../lib/match-data.js";
 import { MATCH_COVERAGE, seasonSummary } from "../../lib/matches.js";
 import "../../styles/matches.css";
+
+const noMatchRecords = seasonsList.every((season) => seasonSummary(season, matches).coverage === "none");
 ---
 
 <Base
@@ -37,7 +39,7 @@ import "../../styles/matches.css";
                   <a href={`/seasons/${s.id}`} class="table__link">
                     {s.label}
                   </a>
-                  <span class="match-season-coverage">逐场比赛 · {MATCH_COVERAGE[seasonSummary(s, matches).coverage]}</span>
+                  {!noMatchRecords && <span class="match-season-coverage">逐场比赛 · {MATCH_COVERAGE[seasonSummary(s, matches).coverage]}</span>}
                 </td>
                 <td class="num">{seasonSummary(s, matches).played ?? "—"}</td>
                 <td class="num">{s.rank ?? "—"}</td>
@@ -46,7 +48,7 @@ import "../../styles/matches.css";
           }
         </tbody>
       </table>
-      <p class="match-scope">逐场记录完整的赛季按已结束的正式比赛统计场次；其他赛季保留赛事积分榜的场次记录。</p>
+      <p class="match-scope">{noMatchRecords ? "场次与名次来自赛事积分榜，逐场比分尚未收录。" : "场次按已结束的正式比赛统计；逐场记录不完整的赛季沿用赛事积分榜场次。"}</p>
       <a class="btn" href="/matches">查看全部比赛 →</a>
     </div>
   </section>

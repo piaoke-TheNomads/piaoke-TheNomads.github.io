@@ -120,8 +120,19 @@ try {
   assert.deepEqual(await positions(page), initial);
   await action(page, 'undo');
   assert.equal(await page.locator('.tactics-token').count(), 0);
+  await page.locator('[data-formation]').selectOption('2-4-1');
+  assert.equal(await page.locator('.tactics-token').count(), 0, 'changing shape keeps the empty lineup');
+  await action(page, 'reset');
+  const default241 = await positions(page);
+  const expected241 = { 6: [8, 50], 22: [27, 32], 25: [27, 68], 99: [52, 18], 88: [52, 39], 10: [52, 61], 60: [52, 82], 9: [78, 50] };
+  assert.deepEqual(Object.keys(default241).sort(), Object.keys(expected241).sort());
+  for (const [number, point] of Object.entries(expected241)) assert.deepEqual([default241[number].x, default241[number].y], point);
+  assert.deepEqual(current(await state(page)).annotations, []);
+  assert.equal(current(await state(page)).ball, null);
+  await action(page, 'undo');
+  assert.equal(await page.locator('.tactics-token').count(), 0);
   await page.locator('[data-plan-select]').selectOption(copiedId);
-  pass('新建、另存、重命名、切换独立方案、阵型及撤销');
+  pass('新建、另存、重命名、独立方案、切模板保留队员、322/241默认首发及撤销');
 
   const savedBeforeExport = await state(page);
   const backupDownload = page.waitForEvent('download');

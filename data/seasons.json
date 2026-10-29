@@ -9,7 +9,7 @@
       "teams": 8,
       "result": "冠军",
       "record": null,
-      "note": "八队双循环，领先第二名 8 分。",
+      "note": "八队双循环，积分领先第二名 8 分。",
       "status": "completed",
       "matchCoverage": "none"
     },
@@ -21,7 +21,7 @@
       "teams": 9,
       "result": "季军",
       "record": null,
-      "note": "九队单循环，与第二名同分、净胜球落后。",
+      "note": "九队单循环，与第二名积分相同，净胜球较少。",
       "status": "completed",
       "matchCoverage": "none"
     },
@@ -33,7 +33,7 @@
       "teams": 10,
       "result": "四强",
       "record": null,
-      "note": "十队单循环，止步四强。",
+      "note": "十队单循环，进入四强。",
       "status": "completed",
       "matchCoverage": "none"
     },
@@ -45,7 +45,7 @@
       "teams": null,
       "result": "常规赛冠军 · 季后赛冠军",
       "record": null,
-      "note": "建队首季，常规赛与季后赛双冠。",
+      "note": "建队首季。",
       "status": "completed",
       "matchCoverage": "none"
     }
