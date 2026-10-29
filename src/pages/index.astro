@@ -3,14 +3,17 @@ import Base from "../layouts/Base.astro";
 import {
   site,
   roster,
+  activeRoster,
+  retiredRoster,
   honorsList,
   seasonsList,
   stats,
   positionOf,
+  displayNumber,
 } from "../lib/data";
 
-const preview = roster.slice(0, 12);
-const rest = roster.length - preview.length;
+const preview = activeRoster.slice(0, 12);
+const rest = activeRoster.length - preview.length;
 const latest = seasonsList[0];
 ---
 
@@ -41,7 +44,7 @@ const latest = seasonsList[0];
               {site.school}足球队，{site.est} 年成立，参加{site.league}。
             </p>
             <div class="hero__meta">
-              <span>{stats.players} 名球员</span>
+              <span>{stats.active} 名现役</span>
               <span>{stats.seasons} 个赛季</span>
               <span>{stats.stars} 个冠军赛季</span>
             </div>
@@ -51,7 +54,7 @@ const latest = seasonsList[0];
         <div class="stats">
           <div class="stats__cell">
             <span class="num stats__num">{stats.players}</span>
-            <p class="label stats__key">在册球员</p>
+            <p class="label stats__key">现役球员</p>
           </div>
           <div class="stats__cell">
             <span class="num stats__num">{stats.seasons}</span>
@@ -180,7 +183,7 @@ const latest = seasonsList[0];
       <div class="section__head">
         <div>
           <p class="label">Squad · 名单</p>
-          <h2 style="margin-top:10px">{stats.players} 名球员</h2>
+          <h2 style="margin-top:10px">{stats.active} 名现役</h2>
         </div>
         <a class="section__more" href="/squad">全部名单 →</a>
       </div>
@@ -188,9 +191,9 @@ const latest = seasonsList[0];
       <div class="roster" style="border-bottom:1px solid var(--rule)">
         {
           preview.map((p) => (
-            <a class="player" href={`/squad/${p.number}`}>
+            <a class="player" href={`/squad/${p.number}`} data-status={p.status ?? "pending"}>
               <span class="player__row">
-                <span class="num player__num">{p.number}</span>
+                <span class="num player__num">{displayNumber(p)}</span>
                 <span class="player__pos">{positionOf(p) ?? ""}</span>
               </span>
               <span class="player__name">{p.name}</span>

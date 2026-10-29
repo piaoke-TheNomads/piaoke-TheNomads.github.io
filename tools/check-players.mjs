@@ -12,13 +12,19 @@ const { players, source, updated } = JSON.parse(
   readFileSync(join(root, "data/players.json"), "utf8")
 );
 
-const POS = ["GK", "DF", "MF", "FW"];
+const POS = ["GK", "CB", "LB", "RB", "FB", "DM", "CM", "AM", "LM", "RM", "ST"];
+const STATUS = ["active", "retired"];
 const errors = [];
 const warns = [];
 
 // 1. 号码唯一 + 范围
 const seen = new Map();
+const noNumber = [];
 for (const p of players) {
+  if (p.number == null) {
+    noNumber.push(p.name);
+    continue;
+  }
   if (!Number.isInteger(p.number) || p.number < 1 || p.number > 99) {
     errors.push(`号码非法：${p.name} -> ${p.number}`);
   }
@@ -33,7 +39,14 @@ if (!players.length) errors.push("名单是空的");
 
 // 3. 位置
 const noPos = players.filter((p) => !p.position);
-const badPos = players.filter((p) => p.position && !POS.includes(p.position));
+const badPos = players.filter((p) => {
+  const codes = p.positions ?? (p.position ? [p.position] : []);
+  return codes.some((c) => !POS.includes(c));
+});
+const badStatus = players.filter((p) => p.status != null && !STATUS.includes(p.status));
+if (badStatus.length) {
+  errors.push(`状态取值非法（只能是 active / retired）：` + badStatus.map((p) => `${p.name}=${p.status}`).join(", "));
+}
 if (badPos.length) {
   errors.push(
     `位置取值非法（只能是 ${POS.join("/")}）：` +
@@ -53,14 +66,16 @@ bar("═");
 console.log(`来源      ${source}`);
 console.log(`更新      ${updated}`);
 console.log(`总人数    ${players.length}`);
-console.log(`号码范围  ${Math.min(...players.map((p) => p.number))} – ${Math.max(...players.map((p) => p.number))}`);
+console.log(`现役/退役 ${players.filter((p) => p.status === "active").length} / ${players.filter((p) => p.status === "retired").length}（待确认 ${players.filter((p) => !p.status).length}）`);
+const nums = players.map((p) => p.number).filter((n) => n != null);
+console.log(`号码范围  ${Math.min(...nums)} – ${Math.max(...nums)}${noNumber.length ? ` · 无号码 ${noNumber.length} 人` : ""}`);
 console.log(`位置已填  ${players.length - noPos.length}/${players.length}`);
 console.log(`照片已填  ${players.length - noPhoto.length}/${players.length}`);
 console.log(`加入年已填 ${players.length - noJoined.length}/${players.length}`);
 
 if (noPos.length) {
   bar();
-  console.log(`缺位置（${noPos.length} 人）—— 按 GK 门将 / DF 后卫 / MF 中场 / FW 前锋 填：`);
+  console.log(`缺位置（${noPos.length} 人）—— 按 ${POS.join(" / ")} 填：`);
   console.log("  " + noPos.map((p) => `${p.number} ${p.name}`).join("  ·  "));
 }
 

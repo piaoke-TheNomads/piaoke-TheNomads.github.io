@@ -7,14 +7,42 @@ import album from "../../data/album.json";
 
 export { site, honors, seasons, staff, players, album };
 
+/** 位置代码 → 中文。三人以上共用的宽泛位置（FB/LB/RB）单独标注。 */
 export const POSITION_LABEL = {
   GK: "门将",
-  DF: "后卫",
-  MF: "中场",
-  FW: "前锋",
+  CB: "中后卫",
+  LB: "左后卫",
+  RB: "右后卫",
+  FB: "边后卫",
+  DM: "后腰",
+  CM: "中前卫",
+  AM: "前腰",
+  LM: "左边前卫",
+  RM: "右边前卫",
+  ST: "中锋",
 };
 
-export const roster = [...players.players].sort((a, b) => a.number - b.number);
+export const STATUS_LABEL = {
+  active: "现役",
+  retired: "退役",
+};
+
+/** 有号码的按号码升序；没号码的排到最后 */
+const byNumber = (a, b) => {
+  const an = a.number ?? Number.MAX_SAFE_INTEGER;
+  const bn = b.number ?? Number.MAX_SAFE_INTEGER;
+  return an - bn || a.name.localeCompare(b.name, "zh");
+};
+
+export const roster = [...players.players].sort(byNumber);
+
+/** 分三组：现役、退役、待确认。组内保持号码顺序。 */
+export const activeRoster = roster.filter((p) => p.status === "active");
+export const retiredRoster = roster.filter((p) => p.status === "retired");
+export const pendingRoster = roster.filter((p) => !p.status);
+
+/** 详情页只给有号码的人开，没号码没法做 /squad/<num> 的地址 */
+export const rosterWithNumber = roster.filter((p) => p.number != null);
 
 export const honorsList = [...honors.honors].sort((a, b) =>
   b.season.localeCompare(a.season)
@@ -31,12 +59,29 @@ export const championSeasons = [
   ...new Set(honorsList.filter((h) => h.kind === "champion").map((h) => h.season)),
 ].sort();
 
-export const positionOf = (p) => (p.position ? POSITION_LABEL[p.position] ?? p.position : null);
+const labelOf = (code) => POSITION_LABEL[code] ?? code;
+
+/** 位置的中文显示；一个人多个位置时用「 / 」连起来，没填就返回 null */
+export const positionOf = (p) => {
+  if (p.positions?.length) return p.positions.map(labelOf).join(" / ");
+  if (p.position) return labelOf(p.position);
+  return null;
+};
+
+export const statusOf = (p) => (p.status ? STATUS_LABEL[p.status] ?? p.status : null);
 
 export const photoUrl = (p) => (p.photo ? `/photos/${p.photo}` : null);
 
+/** 没了号码的人也要有稳定地址，详情页用名字做锚点 */
+export const playerHref = (p) =>
+  p.number != null ? `/squad/${p.number}` : `/squad/name/${encodeURIComponent(p.name)}`;
+
+export const displayNumber = (p) => (p.number != null ? String(p.number) : "—");
+
 export const stats = {
   players: roster.length,
+  active: activeRoster.length,
+  retired: retiredRoster.length,
   seasons: seasonsList.length,
   stars: championSeasons.length,
   est: site.est,

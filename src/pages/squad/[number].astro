@@ -1,27 +1,32 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { roster, positionOf, photoUrl, site } from "../../lib/data";
+import { rosterWithNumber, positionOf, statusOf, photoUrl, site } from "../../lib/data";
 
 export function getStaticPaths() {
-  return roster.map((p, i) => ({
+  return rosterWithNumber.map((p, i) => ({
     params: { number: String(p.number) },
     props: {
       player: p,
-      prev: roster[i - 1] ?? null,
-      next: roster[i + 1] ?? null,
-      mates: [...roster.slice(Math.max(0, i - 3), i), ...roster.slice(i + 1, i + 4)],
+      prev: rosterWithNumber[i - 1] ?? null,
+      next: rosterWithNumber[i + 1] ?? null,
+      mates: [
+        ...rosterWithNumber.slice(Math.max(0, i - 3), i),
+        ...rosterWithNumber.slice(i + 1, i + 4),
+      ],
     },
   }));
 }
 
 const { player, prev, next, mates } = Astro.props;
 const pos = positionOf(player);
+const status = statusOf(player);
 const img = photoUrl(player);
+const isRetired = player.status === "retired";
 ---
 
 <Base
   title={`${player.number} ${player.name}`}
-  description={`${site.name} ${player.number} 号 ${player.name}${pos ? `，${pos}` : ""}。`}
+  description={`${site.name} ${player.number} 号 ${player.name}${pos ? `，${pos}` : ""}${status ? `，${status}` : ""}。`}
   active="squad"
 >
   <section class="wrap">
@@ -30,10 +35,15 @@ const img = photoUrl(player);
         <a href="/squad">Squad</a> / {String(player.number).padStart(2, "0")}
       </p>
       <div class="player-head">
-        <span class="num player-head__num">{player.number}</span>
+        <span class:list={["num", "player-head__num", { "is-retired": isRetired }]}>
+          {player.number}
+        </span>
         <div>
           <h1>{player.name}</h1>
-          {pos ? <p class="label" style="margin-top:12px">{pos}</p> : null}
+          <p class="player-head__tags">
+            {status ? <span class="tag" data-status={player.status}>{status}</span> : null}
+            {pos ? <span class="label">{pos}</span> : <span class="label">位置待补</span>}
+          </p>
         </div>
       </div>
     </div>
@@ -59,6 +69,10 @@ const img = photoUrl(player);
               <td class="num">{player.number}</td>
             </tr>
             <tr>
+              <th scope="row">状态</th>
+              <td>{status ?? "待确认"}</td>
+            </tr>
+            <tr>
               <th scope="row">位置</th>
               <td>{pos ?? "—"}</td>
             </tr>
@@ -74,7 +88,9 @@ const img = photoUrl(player);
             prev ? (
               <a class="pager__link" href={`/squad/${prev.number}`}>
                 <span class="label">上一位</span>
-                <span class="pager__name">{prev.number} {prev.name}</span>
+                <span class="pager__name">
+                  {prev.number} {prev.name}
+                </span>
               </a>
             ) : (
               <span />
@@ -84,7 +100,9 @@ const img = photoUrl(player);
             next ? (
               <a class="pager__link pager__link--next" href={`/squad/${next.number}`}>
                 <span class="label">下一位</span>
-                <span class="pager__name">{next.number} {next.name}</span>
+                <span class="pager__name">
+                  {next.number} {next.name}
+                </span>
               </a>
             ) : (
               <span />
@@ -95,7 +113,7 @@ const img = photoUrl(player);
     </div>
 
     <div class="section section--tight">
-      <p class="label">Teammates · 队友</p>
+      <p class="label">Team · 相邻号码</p>
       <div class="chips" style="margin-top:14px">
         {
           mates.map((m) => (
