@@ -122,10 +122,15 @@ CNAME 指到 `qmpk.pages.dev` 即可。`.club` 域名在 Cloudflare 注册约 ¥
 
 仓库里已经放好 `.github/workflows/deploy.yml`，推上去就能自动部署。
 
-1. 在 GitHub 新建**组织的**仓库（不是个人仓库），比如 `qmpk-official/site`
-2. `git remote add origin git@github.com:qmpk-official/site.git && git push -u origin main`
+1. 在 GitHub 新建**组织的**仓库（不是个人仓库），名字必须是 `piaoke-TheNomads.github.io`
+2. `git remote add origin git@github.com:piaoke-TheNomads/piaoke-TheNomads.github.io.git && git push -u origin main`
 3. 仓库 Settings → Pages → Source 选 **GitHub Actions**
-4. 几分钟后网址是 `https://qmpk-official.github.io/site/`
+4. 几分钟后网址是 `https://piaoke-thenomads.github.io/`
+
+> **仓库名为什么必须是 `<组织名>.github.io`**：这种仓库发布在域名根路径（`https://xxx.github.io/`），
+> 站内所有绝对路径（`/squad/`、`/photos/...`）直接可用。如果仓库叫 `site`，网址会变成
+> `https://xxx.github.io/site/`，所有绝对路径都要加 `base` 前缀才对，等于要把全站链接重写一遍。
+> 想要短网址就选前者。
 
 > 为什么建议用组织：组织账号归球队，管理员可以有好几个，谁毕业了都能交接；
 > 个人仓库挂在你的账号下，你走了网站就悬着了。个人仓库也能用，只是别忘了交接。
