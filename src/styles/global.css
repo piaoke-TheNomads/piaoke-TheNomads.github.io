@@ -1403,6 +1403,11 @@ p {
   }
 }
 
+/* hidden 必须压过组件自身的 display 值，否则筛选按钮点不动 */
+[hidden] {
+  display: none !important;
+}
+
 /* ---------- 名单：现役状态 ---------- */
 
 .filters {

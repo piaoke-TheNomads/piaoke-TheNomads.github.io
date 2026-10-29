@@ -1,92 +1,80 @@
 ---
 import Base from "../../layouts/Base.astro";
-import {
-  activeRoster,
-  retiredRoster,
-  pendingRoster,
-  rosterWithNumber,
-  stats,
-  positionOf,
-  playerHref,
-  displayNumber,
-} from "../../lib/data";
+import { roster, stats, positionOf, displayNumber } from "../../lib/data";
 
-// 先做初筛，页面上的按钮只是在这个基础上过滤，避免闪一下
-const groups = [
-  { key: "all", label: "全部", list: [...activeRoster, ...retiredRoster, ...pendingRoster] },
-  { key: "active", label: "现役", list: activeRoster },
-  { key: "retired", label: "退役", list: retiredRoster },
-  { key: "pending", label: "待确认", list: pendingRoster },
-].filter((g) => g.list.length);
+const hasStatus = (k) => roster.some((p) => (p.status ?? "") === k);
+
+const filters = [
+  { key: "all", label: "全部", n: roster.length },
+  { key: "active", label: "现役", n: roster.filter((p) => p.status === "active").length },
+  { key: "retired", label: "退役", n: roster.filter((p) => p.status === "retired").length },
+].filter((f) => f.key === "all" || f.n > 0);
 ---
 
 <Base
   title="名单"
-  description={`球门飘客队史 ${stats.players} 名球员，其中现役 ${stats.active} 人、退役 ${stats.retired} 人。`}
+  description={`${stats.players} 名球员的号码、位置与现役状态，按号码排列。`}
   active="squad"
 >
   <section class="wrap">
     <div class="page-head">
       <p class="label page-head__kicker">Squad · 名单</p>
       <h1>{stats.players} 名球员</h1>
-      <p class="lede page-head__dek">
-        队史共 {stats.players} 人：现役 {stats.active} 人、退役 {stats.retired} 人，另有
-        {stats.players - stats.active - stats.retired} 人现役状态待确认。号码从小到大排列，点进去看每个人的页面。
-      </p>
     </div>
 
     <div class="section section--tight">
-      <div class="filters" role="group" aria-label="按现役状态筛选">
+      <div class="filters" role="group" aria-label="筛选">
         {
-          groups.map((g, i) => (
+          filters.map((f) => (
             <button
               type="button"
               class="filter"
-              data-filter={g.key}
-              aria-pressed={i === 0 ? "true" : "false"}
+              data-filter={f.key}
+              aria-pressed={f.key === "all" ? "true" : "false"}
             >
-              {g.label}
-              <span class="filter__n">{g.list.length}</span>
+              {f.label}
+              <span class="filter__n">{f.n}</span>
             </button>
           ))
         }
       </div>
 
-      <div class="roster roster--status">
+      <div class="roster">
         {
-          [...activeRoster, ...retiredRoster, ...pendingRoster].map((p) => (
+          roster.map((p) => (
             <a
               class="player"
               href={p.number != null ? `/squad/${p.number}` : undefined}
-              data-status={p.status ?? "pending"}
+              data-status={p.status ?? ""}
               aria-label={`${p.name}${positionOf(p) ? "，" + positionOf(p) : ""}`}
             >
               <span class="player__row">
                 <span class="num player__num">{displayNumber(p)}</span>
-                <span class="player__pos">{positionOf(p) ?? "位置待补"}</span>
+                <span class="player__pos">{positionOf(p) ?? ""}</span>
               </span>
               <span class="player__name">{p.name}</span>
-              <span class="player__status" data-status={p.status ?? "pending"}>
-                {p.status === "active" ? "现役" : p.status === "retired" ? "退役" : "待确认"}
-              </span>
+              {p.status ? (
+                <span class="player__status" data-status={p.status}>
+                  {p.status === "active" ? "现役" : "退役"}
+                </span>
+              ) : null}
             </a>
           ))
         }
       </div>
-
-      <p class="note" style="margin-top:20px">
-        没有号码标记「—」的杨思谙、黄思源两位，号码未能确认，暂不单独开页。
-      </p>
     </div>
   </section>
 
   <script>
-    const buttons = document.querySelectorAll<HTMLButtonElement>(".filter");
-    const cards = document.querySelectorAll<HTMLElement>(".roster .player");
+    const buttons = document.querySelectorAll(".filter");
+    const cards = document.querySelectorAll(".roster .player");
+
     buttons.forEach((btn) => {
       btn.addEventListener("click", () => {
         const key = btn.dataset.filter;
-        buttons.forEach((b) => b.setAttribute("aria-pressed", String(b === btn)));
+        buttons.forEach((b) =>
+          b.setAttribute("aria-pressed", String(b === btn))
+        );
         cards.forEach((card) => {
           const show = key === "all" || card.dataset.status === key;
           card.hidden = !show;
