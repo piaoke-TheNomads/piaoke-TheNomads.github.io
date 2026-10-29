@@ -27,6 +27,9 @@ jobs:
       - run: npm run check
       - id: pages
         uses: actions/configure-pages@v5
+        with:
+          # 即使仓库设置里还没手动开 Pages，也自动开启（需要 pages:write 权限）
+          enablement: true
       - run: npx astro build --site "${{ steps.pages.outputs.base_url }}"
         id: buildstep
       - uses: actions/upload-pages-artifact@v3
