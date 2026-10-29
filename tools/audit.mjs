@@ -2,7 +2,7 @@
 import { chromium } from "playwright";
 
 const base = process.argv[2] ?? "http://127.0.0.1:8130";
-const pages = ["/", "/squad/", "/squad/99/", "/seasons/", "/seasons/2022-23/", "/honors/", "/photos/", "/about/"];
+const pages = ["/", "/squad/", "/squad/99/", "/seasons/", "/seasons/2022-23/", "/honors/", "/photos/", "/tactics/", "/about/"];
 const browser = await chromium.launch();
 let problems = 0;
 

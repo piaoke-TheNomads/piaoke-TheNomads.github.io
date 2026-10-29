@@ -50,5 +50,6 @@ export const nav = [
   { href: "/seasons", label: "赛季", key: "seasons" },
   { href: "/honors", label: "荣誉", key: "honors" },
   { href: "/photos", label: "相册", key: "photos" },
+  { href: "/tactics", label: "战术板", key: "tactics" },
   { href: "/about", label: "关于", key: "about" },
 ];

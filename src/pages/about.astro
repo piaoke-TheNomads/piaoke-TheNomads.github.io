@@ -29,7 +29,7 @@ import { site, staffList, stats, championSeasons } from "../lib/data";
           {championSeasons.join(" 与 ")} 两个冠军赛季。
         </p>
         <p>
-          球队没有赞助、没有俱乐部编制，报名、订球衣、约场地都由队里的人自己处理。这个网站也一样。
+          球队目前由队员负责报名、球衣和场地安排。
         </p>
       </div>
 
@@ -62,17 +62,12 @@ import { site, staffList, stats, championSeasons } from "../lib/data";
             <div class="card">
               <p class="label">Role</p>
               <p class="card__t" style="font-size:1.3rem">{s.role}</p>
-              <p class="card__d">
-                {s.name ? s.name : <span class="pending">姓名待补</span>}
-              </p>
+              {s.name ? <p class="card__d">{s.name}</p> : null}
             </div>
           ))
         }
       </div>
 
-      <p class="note" style="margin-top:32px">
-        职衔来自球队 PPT 第 3 页的原话，没有改写。名字还没给，先留位。
-      </p>
     </div>
 
     <div class="section section--tight">

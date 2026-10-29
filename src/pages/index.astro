@@ -38,7 +38,7 @@ const latest = seasonsList[0];
           </div>
           <div>
             <p class="lede">
-              上海科技大学的足球队。{site.est} 年建队，现在还在踢。
+              {site.school}足球队，{site.est} 年成立，参加{site.league}。
             </p>
             <div class="hero__meta">
               <span>{stats.players} 名球员</span>
@@ -75,7 +75,7 @@ const latest = seasonsList[0];
       <div class="grid">
         <div style="grid-column: 1 / span 5">
           <p class="label">About · 关于球队</p>
-          <h2 style="margin-top:14px">把每个赛季都踢完</h2>
+          <h2 style="margin-top:14px">球队简介</h2>
         </div>
         <div style="grid-column: 7 / span 6" class="prose">
           <p>
@@ -84,9 +84,7 @@ const latest = seasonsList[0];
             2025-26 赛季重新拿回冠军。
           </p>
           <p>
-            队徽上有{stats.stars}颗星，对应
-            <em>2022-23</em> 与 <em>2025-26</em>
-            两个冠军赛季。剩下的星星，留给还没踢的比赛。
+            队徽上的 {stats.stars} 颗星对应 <em>2022-23</em> 与 <em>2025-26</em> 两个冠军赛季。
           </p>
           <p style="margin-top:22px">
             <a class="btn" href="/about">关于球队 →</a>
@@ -159,6 +157,21 @@ const latest = seasonsList[0];
           }
         </tbody>
       </table>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="feature-callout">
+        <div>
+          <p class="label">Tactics · 战术板</p>
+          <h2 style="margin-top:10px">排一套八人制站位</h2>
+          <p class="lede" style="margin-top:12px">
+            拖动 1 至 8 号棋子安排位置，布局会保存在当前浏览器中，也可以导出为文件。
+          </p>
+        </div>
+        <a class="btn btn--solid" href="/tactics">打开战术板 →</a>
+      </div>
     </div>
   </section>
 
@@ -246,9 +259,6 @@ const latest = seasonsList[0];
         </figure>
       </div>
 
-      <p class="note" style="margin-top:32px">
-        照片来自球队相册，球员姓名与照片的对应关系仍在整理，名单页暂不显示头像。
-      </p>
     </div>
   </section>
 </Base>

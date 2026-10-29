@@ -1,7 +1,7 @@
 {
   "updated": "2026-10-28",
   "source": "《报名&新球衣》表格截图（工作表1）",
-  "note": "学号与尺码属于内部信息，不入库、不上站。球衣只显示真名。position/photo/joined 待补。",
+  "note": "名单仅记录球衣号码与姓名；学号、尺码等内部信息不在此列。",
   "players": [
     { "number": 10, "name": "李品卓", "position": null, "photo": null, "joined": null },
     { "number": 87, "name": "王明宇", "position": null, "photo": null, "joined": null },

@@ -1,9 +1,6 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { roster, stats, positionOf } from "../../lib/data";
-
-const withPos = roster.filter((p) => p.position).length;
-const withPhoto = roster.filter((p) => p.photo).length;
 ---
 
 <Base
@@ -43,14 +40,6 @@ const withPhoto = roster.filter((p) => p.photo).length;
         }
       </div>
 
-      {
-        withPos < roster.length || withPhoto < roster.length ? (
-          <p class="note" style="margin-top:32px">
-            位置已填 {withPos}/{roster.length}，照片已填 {withPhoto}/{roster.length}。
-            这两项由球队补，补齐后本页会自动显示。
-          </p>
-        ) : null
-      }
     </div>
   </section>
 </Base>

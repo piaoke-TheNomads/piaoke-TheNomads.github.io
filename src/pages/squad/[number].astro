@@ -33,9 +33,7 @@ const img = photoUrl(player);
         <span class="num player-head__num">{player.number}</span>
         <div>
           <h1>{player.name}</h1>
-          <p class="label" style="margin-top:12px">
-            {pos ?? "位置待补"}
-          </p>
+          {pos ? <p class="label" style="margin-top:12px">{pos}</p> : null}
         </div>
       </div>
     </div>
@@ -48,7 +46,6 @@ const img = photoUrl(player);
           ) : (
             <div class="player-portrait player-portrait--empty">
               <span class="num player-portrait__num">{player.number}</span>
-              <span class="label">照片待补</span>
             </div>
           )
         }
@@ -63,11 +60,11 @@ const img = photoUrl(player);
             </tr>
             <tr>
               <th scope="row">位置</th>
-              <td>{pos ?? <span class="pending">待补</span>}</td>
+              <td>{pos ?? "—"}</td>
             </tr>
             <tr>
               <th scope="row">加入年份</th>
-              <td>{player.joined ?? <span class="pending">待补</span>}</td>
+              <td>{player.joined ?? "—"}</td>
             </tr>
           </tbody>
         </table>
