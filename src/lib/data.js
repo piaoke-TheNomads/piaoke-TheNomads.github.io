@@ -92,6 +92,7 @@ export const albumItems = album.items;
 export const nav = [
   { href: "/", label: "首页", key: "home" },
   { href: "/squad", label: "名单", key: "squad" },
+  { href: "/matches", label: "比赛", key: "matches" },
   { href: "/seasons", label: "赛季", key: "seasons" },
   { href: "/honors", label: "荣誉", key: "honors" },
   { href: "/photos", label: "相册", key: "photos" },

@@ -1,45 +1,34 @@
 ---
 import Base from "../layouts/Base.astro";
 import { activeRoster, positionOf } from "../lib/data.js";
-
-// 场上 8 个槽位：门将 1、后卫 3、中场 2、前锋 2。
-const SLOTS = [
-  { id: "GK", x: 8, y: 50 },
-  { id: "D1", x: 26, y: 18 },
-  { id: "D2", x: 26, y: 50 },
-  { id: "D3", x: 26, y: 82 },
-  { id: "M1", x: 52, y: 32 },
-  { id: "M2", x: 52, y: 68 },
-  { id: "F1", x: 76, y: 32 },
-  { id: "F2", x: 76, y: 68 },
-];
-
-const players = activeRoster.map((p) => ({
-  number: p.number,
-  name: p.name,
-  position: positionOf(p) || "",
-}));
+import "../styles/tactics.css";
+const players = activeRoster.map((p) => ({ id: p.id, number: p.number, name: p.name, position: p.position, positions: p.positions, positionLabel: positionOf(p) || "" }));
 ---
 
-<Base
-  active="tactics"
-  title="战术板"
-  description="把现役队员拖到球场上，排出球门飘客的八人站位。"
->
+<Base active="tactics" title="战术板" description="八人制足球战术板，安排站位、保存阵容并分享战术图。">
   <section class="section tactics-page">
-    <div class="wrap">
+    <div class="wrap tactics-wrap">
       <div class="tactics-intro">
-        <p class="label">Tactics · 战术</p>
-        <h1>战术板</h1>
+        <div><p class="label">Tactics · 八人制</p><h1>战术板</h1></div>
+        <p class="tactics-storage" data-save-state>方案保存在当前浏览器</p>
       </div>
-
+      <div class="tactics-planbar">
+        <label class="tactics-select-label">方案<select data-plan-select aria-label="选择方案"></select></label>
+        <div class="tactics-button-group">
+          <button type="button" data-action="new">新建</button>
+          <button type="button" data-action="save-as">另存为</button>
+          <button type="button" data-action="rename">重命名</button>
+          <button type="button" data-action="delete">删除</button>
+        </div>
+      </div>
+      <div class="tactics-controls">
+        <label class="tactics-select-label">阵型<select data-formation aria-label="阵型模板"><option value="3-2-2">3–2–2</option><option value="2-3-2">2–3–2</option></select></label>
+        <button type="button" data-action="reset">恢复默认阵型</button>
+        <button type="button" data-action="undo" disabled>撤销</button>
+        <span class="tactics-count" data-count>场上 0 / 8</span>
+      </div>
       <div class="tactics-board-wrap">
-        <div
-          class="tactics-board"
-          data-board
-          role="application"
-          aria-label="八人制战术板，可把队员拖到场上"
-        >
+        <div class="tactics-board" data-board role="group" aria-label="八人制球场" aria-describedby="tactics-help" tabindex="0">
           <div class="tactics-field" aria-hidden="true">
             <svg class="tactics-markings" viewBox="0 0 96 66" preserveAspectRatio="none">
               <!-- 八人制 60m x 40m，1m = 1.5 单位，横纵同尺度 -->
@@ -71,654 +60,43 @@ const players = activeRoster.map((p) => ({
 
           <div class="tactics-onfield" data-onfield></div>
         </div>
-
-        <div class="tactics-toolbar">
-          <button class="btn tactics-action" type="button" data-action="reset">恢复默认阵型</button>
-          <span class="tactics-status" role="status" aria-live="polite" data-status></span>
+        <div class="tactics-selection">
+          <span data-selection>选择队员后可安排上场或下场</span>
+          <button type="button" data-action="remove" disabled>下场</button>
+          <button type="button" data-action="cancel-selection" hidden>取消选择</button>
         </div>
+        <p class="tactics-status" role="status" aria-live="polite" aria-atomic="true" data-status></p>
       </div>
-
       <div class="tactics-bench">
-        <p class="label">现役名单 · 拖到场上</p>
+        <div class="tactics-bench-heading"><p class="label">现役队员</p><span>场上最多 8 人</span></div>
         <div class="tactics-bench__list" data-bench></div>
       </div>
+      <div class="tactics-footer-controls">
+        <button type="button" class="tactics-primary" data-action="image">导出战术图片</button>
+        <button type="button" data-action="backup">导出方案备份</button>
+        <button type="button" data-action="import">导入方案</button>
+        <input type="file" accept=".json,application/json" data-import-file hidden />
+      </div>
+      <p class="tactics-footnote">方案仅保存在本机的当前浏览器。导出备份后，可在其他设备导入并继续编辑。</p>
+      <details class="tactics-help" id="tactics-help"><summary>操作说明</summary><p>拖动队员到球场，覆盖另一名队员可换人或换位。也可先选择替补，再点击场上位置。选中场上队员后，方向键微调站位，Delete 键下场；Shift + 方向键加快移动。切换阵型保留当前队员，恢复默认阵型会重新选人。</p></details>
     </div>
   </section>
+  <dialog class="tactics-dialog" data-name-dialog aria-labelledby="plan-dialog-title">
+    <form data-name-form>
+      <h2 id="plan-dialog-title" data-dialog-title>新建方案</h2>
+      <label>方案名称<input data-plan-name type="text" maxlength="60" required autocomplete="off" /></label>
+      <p class="tactics-dialog-error" data-name-error role="alert"></p>
+      <div class="tactics-dialog-actions"><button type="button" data-action="close-name">取消</button><button type="submit" class="tactics-primary">保存</button></div>
+    </form>
+  </dialog>
+  <dialog class="tactics-dialog tactics-image-dialog" data-image-dialog aria-labelledby="image-dialog-title">
+    <h2 id="image-dialog-title">战术图片</h2>
+    <p data-image-status role="status" aria-live="polite">正在生成图片…</p>
+    <img data-image-preview alt="当前阵容的战术图片预览" hidden />
+    <div class="tactics-dialog-actions"><button type="button" data-action="close-image">关闭</button><a data-image-download class="tactics-primary" hidden>下载 PNG</a><button type="button" data-action="share" hidden>分享图片</button></div>
+  </dialog>
+  <script type="application/json" id="tactics-players" set:html={JSON.stringify(players).replace(/</g, "\\u003c")} />
 </Base>
-
-<script define:vars={{ SLOTS, players }}>
-  const board = document.querySelector("[data-board]");
-  const onfield = document.querySelector("[data-onfield]");
-  const bench = document.querySelector("[data-bench]");
-  const statusEl = document.querySelector("[data-status]");
-  const storageKey = "qmpk-tactics-v2";
-
-  const clamp = (v, min, max) => Math.max(min, Math.min(max, v));
-  const sorted = [...players].sort((a, b) => (a.number ?? 999) - (b.number ?? 999));
-  const nameOf = (n) => (sorted.find((p) => p.number === n) || {}).name || "";
-
-  // onField: { 槽位键: 号码 }   spots: { 槽位键: {x,y} }
-  let onField = {};
-  let spots = {};
-  let statusTimer;
-
-  function defaultField() {
-    const field = {};
-    const used = new Set();
-    const take = (key, test) => {
-      const pick = sorted.find((p) => !used.has(p.number) && test(p.position));
-      if (pick) {
-        field[key] = pick.number;
-        used.add(pick.number);
-      }
-    };
-    take("GK", (pos) => pos === "GK");
-    take("D1", (pos) => /^(CB|LB|RB|FB)$/.test(pos));
-    take("D2", (pos) => /^(CB|LB|RB|FB)$/.test(pos));
-    take("D3", (pos) => /^(CB|LB|RB|FB)$/.test(pos));
-    take("M1", (pos) => /^(DM|CM|AM|LM|RM)$/.test(pos));
-    take("M2", (pos) => /^(DM|CM|AM|LM|RM)$/.test(pos));
-    take("F1", (pos) => /^(ST|AM|LM|RM)$/.test(pos));
-    take("F2", (pos) => /^(ST|AM|LM|RM)$/.test(pos));
-    SLOTS.forEach((slot) => {
-      if (field[slot.id] !== undefined) return;
-      const pick = sorted.find((p) => !used.has(p.number));
-      if (pick) {
-        field[slot.id] = pick.number;
-        used.add(pick.number);
-      }
-    });
-    return field;
-  }
-
-  function defaultSpots() {
-    return Object.fromEntries(SLOTS.map((s) => [s.id, { x: s.x, y: s.y }]));
-  }
-
-  function say(msg) {
-    if (!statusEl) return;
-    window.clearTimeout(statusTimer);
-    statusEl.textContent = msg;
-    statusTimer = window.setTimeout(() => {
-      statusEl.textContent = "";
-    }, 1600);
-  }
-
-  function persist() {
-    try {
-      window.localStorage.setItem(storageKey, JSON.stringify({ onField, spots }));
-    } catch {
-      /* 隐私模式下 localStorage 可能不可用 */
-    }
-  }
-
-  function hasPos(number) {
-    return Object.values(onField).includes(number);
-  }
-
-  function makeToken(number, x, y, key) {
-    const el = document.createElement("button");
-    el.type = "button";
-    el.className = "tactics-token";
-    el.dataset.number = String(number);
-    if (key) el.dataset.slot = key;
-    el.style.left = `${x}%`;
-    el.style.top = `${y}%`;
-    el.setAttribute("aria-label", `${number} 号 ${nameOf(number)}，可拖动`);
-    el.innerHTML =
-      `<span class="tactics-token__num num">${number}</span>` +
-      `<span class="tactics-token__name">${nameOf(number)}</span>`;
-    return el;
-  }
-
-  function render() {
-    onfield.innerHTML = "";
-    Object.entries(onField).forEach(([key, number]) => {
-      const slot = SLOTS.find((s) => s.id === key);
-      const pt = spots[key] || (slot ? { x: slot.x, y: slot.y } : { x: 50, y: 50 });
-      const el = makeToken(number, pt.x, pt.y, key);
-      onfield.append(el);
-    });
-
-    bench.innerHTML = "";
-    sorted.forEach((p) => {
-      const chip = document.createElement("button");
-      chip.type = "button";
-      chip.className = "tactics-chip";
-      chip.dataset.number = String(p.number);
-      const on = hasPos(p.number);
-      chip.classList.toggle("is-on", on);
-      chip.setAttribute("aria-pressed", on ? "true" : "false");
-      chip.innerHTML =
-        `<span class="tactics-chip__num num">${p.number}</span>` +
-        `<span class="tactics-chip__name">${p.name}</span>`;
-      bench.append(chip);
-    });
-  }
-
-  // ---- 拖动 ----
-  // onField = { 唯一键: 号码 }，spots[同一个键] = 坐标。键是什么不重要，
-  // 场上一共 8 个位置，谁站哪儿完全由坐标和占用关系决定。
-  let drag = null;
-  let lastTap = { number: null, at: 0 };
-
-  function occupied() {
-    return new Set(Object.values(onField));
-  }
-
-  // 找到覆盖 (x,y) 的那个场上棋子，返回它的 key（没有则 null）
-  // 半径按棋子实际尺寸换算成百分比，而不是拍一个固定值，
-  // 这样在大屏小屏上「压在别人身上」的判定范围都一致。
-  function tokenNear(x, y, exceptNumber) {
-    let best = null;
-    let bestDist = Infinity;
-    const r = board.getBoundingClientRect();
-    // 棋子在屏幕上约 62px，换算成棋盘的百分比半径（含一点余量方便对齐）
-    const token = board.querySelector(".tactics-token");
-    const tokenW = token ? token.getBoundingClientRect().width : 62;
-    const radiusX = (tokenW / r.width) * 100 * 0.75;
-    const radiusY = (tokenW / r.height) * 100 * 0.75;
-    Object.entries(onField).forEach(([key, number]) => {
-      if (number === exceptNumber) return;
-      const pt = spots[key];
-      if (!pt) return;
-      // 归一化到同一个坐标系里比较
-      const dx = (pt.x - x) / radiusX;
-      const dy = (pt.y - y) / radiusY;
-      const d = Math.hypot(dx, dy);
-      if (d < bestDist) {
-        bestDist = d;
-        best = key;
-      }
-    });
-    return bestDist <= 1 ? best : null;
-  }
-
-  function removePlayer(number) {
-    Object.keys(onField).forEach((key) => {
-      if (onField[key] === number) {
-        delete onField[key];
-        delete spots[key];
-      }
-    });
-  }
-
-  function beginDrag(el, number, pointerId, fromBench, grabOffset, startX, startY) {
-    drag = {
-      el,
-      number,
-      originKey: fromBench ? null : el.dataset.slot,
-      fromBench: !!fromBench,
-      pointerId,
-      last: null,
-      startPt: { x: startX, y: startY },
-      moved: false,
-      // 手指/鼠标按在棋子上的相对位置，拖动时保持不跳
-      grabOffset: grabOffset || { dx: 0, dy: 0 },
-    };
-    el.classList.add("is-dragging");
-    try {
-      el.setPointerCapture?.(pointerId);
-    } catch {
-      /* 元素可能已在同一次事件里被移除，忽略 */
-    }
-  }
-
-  // 超过这个像素距离才算「真的在拖」，否则当成一次点击。
-  // 触屏和鼠标按下时都会有 1-3px 的抖动，阈值太小会把单击误判成拖动。
-  const DRAG_THRESHOLD = 6;
-
-  function track(clientX, clientY) {
-    if (!drag) return;
-    const r = board.getBoundingClientRect();
-    const off = drag.grabOffset || { dx: 0, dy: 0 };
-    const x = clamp((((clientX + off.dx) - r.left) / r.width) * 100, 3, 97);
-    const y = clamp((((clientY + off.dy) - r.top) / r.height) * 100, 6, 94);
-
-    // 还没越过阈值之前只记位置，不动 DOM、不算移动
-    if (!drag.moved) {
-      const start = drag.startPt;
-      if (start && Math.hypot(clientX - start.x, clientY - start.y) < DRAG_THRESHOLD) {
-        drag.last = { x, y };
-        return;
-      }
-      drag.moved = true;
-      window.__qmpkDragged = true;
-    }
-
-    drag.el.style.left = `${x}%`;
-    drag.el.style.top = `${y}%`;
-    drag.last = { x, y };
-  }
-
-  // 算出手指相对棋子圆心的偏移，保证「按在哪就从哪拖」
-  // 注意：棋子是正圆，getBoundingClientRect().height 会把下方姓名药丸也量进去，
-  // 所以圆心必须用 width 推算。
-  function offsetFor(el, clientX, clientY) {
-    const box = el.getBoundingClientRect();
-    const size = box.width;
-    const cx = box.left + size / 2;
-    const cy = box.top + size / 2;
-    return { dx: cx - clientX, dy: cy - clientY };
-  }
-
-  function finishDrag(dropped) {
-    if (!drag) return;
-    window.setTimeout(() => { window.__qmpkDragged = false; }, 60);
-    const { el, number, last, originKey, fromBench, moved } = drag;
-    el.classList.remove("is-dragging");
-    try { el.releasePointerCapture?.(drag.pointerId); } catch { /* ignore */ }
-    drag = null;
-
-    // 没真的移动过（只是点了一下）→ 场内棋子判断是不是双击；场下的什么都不做
-    if (!moved) {
-      if (fromBench) {
-        el.remove();
-        render();
-        return;
-      }
-      const now = Date.now();
-      if (lastTap.number === number && now - lastTap.at < 420) {
-        lastTap = { number: null, at: 0 };
-        removePlayer(number);
-        persist();
-        render();
-        say(`${number} 号已下场`);
-      } else {
-        lastTap = { number, at: now };
-        // 位置没变，把拖拽时的微移还原
-        render();
-      }
-      return;
-    }
-
-    // 拖到场外：场上的回原位，场下的直接丢弃
-    if (!dropped || !last) {
-      if (fromBench) el.remove();
-      render();
-      return;
-    }
-
-    const myKey = fromBench ? `p${number}` : originKey;
-    const mySpotBefore = spots[myKey];
-    const targetKey = tokenNear(last.x, last.y, number);
-
-    if (targetKey && targetKey !== myKey) {
-      // ── 换位：对方接手我原来的位置，我接手他的 ──
-      const otherNum = onField[targetKey];
-      const otherSpot = spots[targetKey];
-      // 先把两个位置清干净，再一起写回，避免互相覆盖
-      delete onField[myKey];
-      delete onField[targetKey];
-      delete spots[myKey];
-      delete spots[targetKey];
-
-      if (mySpotBefore) {
-        // 我原本就在场上 → 真正的两人对调
-        onField[targetKey] = number;
-        spots[targetKey] = { x: otherSpot.x, y: otherSpot.y };
-        onField[myKey] = otherNum;
-        spots[myKey] = { x: mySpotBefore.x, y: mySpotBefore.y };
-      } else {
-        // 我从场下上来 → 顶掉对方，对方回场下
-        onField[targetKey] = number;
-        spots[targetKey] = { x: otherSpot.x, y: otherSpot.y };
-      }
-    } else {
-      // ── 落在空地：就地摆下 ──
-      removePlayer(number);
-      onField[myKey] = number;
-      spots[myKey] = { x: last.x, y: last.y };
-    }
-
-    persist();
-    render();
-    say("已保存");
-  }
-
-  // 场上棋子：按住就拖
-  onfield.addEventListener("pointerdown", (e) => {
-    const el = e.target.closest(".tactics-token");
-    if (!el || drag) return;
-    e.preventDefault();
-    beginDrag(el, Number(el.dataset.number), e.pointerId, false, offsetFor(el, e.clientX, e.clientY), e.clientX, e.clientY);
-    track(e.clientX, e.clientY);
-  });
-
-  // 场下队员：按住就拖
-  bench.addEventListener("pointerdown", (e) => {
-    const chip = e.target.closest(".tactics-chip");
-    if (!chip || drag) return;
-    e.preventDefault();
-    const number = Number(chip.dataset.number);
-    if (occupied().has(number)) return;
-    const ghost = makeToken(number, 50, 50, null);
-    ghost.style.pointerEvents = "none";
-    // ghost 起点先贴到鼠标位置，由 track() 立即校正
-    onfield.append(ghost);
-    beginDrag(ghost, number, e.pointerId, true, { dx: 0, dy: 0 }, e.clientX, e.clientY);
-    track(e.clientX, e.clientY);
-  });
-
-  window.addEventListener("pointermove", (e) => {
-    if (!drag || drag.pointerId !== e.pointerId) return;
-    e.preventDefault();
-    track(e.clientX, e.clientY);
-  });
-
-  window.addEventListener("pointerup", (e) => {
-    if (!drag || drag.pointerId !== e.pointerId) return;
-    const r = board.getBoundingClientRect();
-    const inside =
-      e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-    finishDrag(inside);
-  });
-
-  window.addEventListener("pointercancel", () => finishDrag(false));
-
-  document.querySelector("[data-action='reset']").addEventListener("click", () => {
-    onField = defaultField();
-    spots = defaultSpots();
-    persist();
-    render();
-    say("已恢复默认阵型");
-  });
-
-  // ---- 启动 ----
-  try {
-    const saved = JSON.parse(window.localStorage.getItem(storageKey) || "null");
-    if (saved && saved.onField && typeof saved.onField === "object") {
-      onField = saved.onField;
-      spots = saved.spots && typeof saved.spots === "object" ? saved.spots : defaultSpots();
-    } else {
-      onField = defaultField();
-      spots = defaultSpots();
-    }
-  } catch {
-    onField = defaultField();
-    spots = defaultSpots();
-  }
-  render();
+<script>
+  import "../scripts/tactics.js";
 </script>
-
-<style is:global>
-  .tactics-page {
-    padding-top: clamp(46px, 7vw, 92px);
-  }
-
-  .tactics-intro h1 {
-    margin-top: 12px;
-  }
-
-  .tactics-board-wrap {
-    margin-top: clamp(26px, 4vw, 44px);
-  }
-
-  .tactics-board {
-    position: relative;
-    width: 100%;
-    aspect-ratio: 96 / 66;
-    overflow: hidden;
-    border: 1px solid color-mix(in srgb, var(--ink) 28%, transparent);
-    background: #4f8d5c;
-    box-shadow: 0 20px 45px rgb(16 26 46 / 13%);
-    touch-action: none;
-    user-select: none;
-  }
-
-  .tactics-field,
-  .tactics-markings {
-    position: absolute;
-    inset: 0;
-    width: 100%;
-    height: 100%;
-  }
-
-  .tactics-field {
-    /* 每隔 7.5m 一道割草纹，深浅交替 */
-    background:
-      repeating-linear-gradient(
-        90deg,
-        rgb(255 255 255 / 5%) 0 12.5%,
-        rgb(0 0 0 / 5%) 12.5% 25%
-      ),
-      radial-gradient(120% 90% at 50% 50%, rgb(255 255 255 / 6%), transparent 70%),
-      #4f8d5c;
-  }
-
-  .tactics-markings {
-    fill: none;
-    stroke: rgb(255 255 255 / 80%);
-    stroke-width: 1.2;
-    vector-effect: non-scaling-stroke;
-    stroke-linecap: round;
-  }
-
-  .tactics-markings__dot {
-    fill: rgb(255 255 255 / 82%);
-    stroke: none;
-  }
-
-  .tactics-goal {
-    /* 球门 4m 宽，居中；按 viewBox 3.333/66.667 处的底线对齐 */
-    position: absolute;
-    top: 40%;
-    width: 2.2%;
-    height: 20%;
-    border: 1px solid rgb(255 255 255 / 85%);
-    background: repeating-linear-gradient(
-      90deg,
-      rgb(255 255 255 / 16%) 0 1px,
-      transparent 1px 4px
-    );
-  }
-
-  .tactics-goal--left {
-    left: -1px;
-    border-left: 0;
-  }
-
-  .tactics-goal--right {
-    right: -1px;
-    border-right: 0;
-  }
-
-  .tactics-onfield {
-    position: absolute;
-    inset: 0;
-  }
-
-  .tactics-token {
-    position: absolute;
-    z-index: 2;
-    display: grid;
-    place-items: center;
-    width: clamp(46px, 6.2vw, 64px);
-    height: clamp(46px, 6.2vw, 64px);
-    padding: 0;
-    border: 2px solid var(--paper);
-    border-radius: 50%;
-    background: var(--ink);
-    color: var(--paper);
-    box-shadow: 0 4px 9px rgb(16 26 46 / 30%);
-    cursor: grab;
-    transform: translate(-50%, -50%);
-    transition: box-shadow 140ms ease, transform 140ms ease;
-    touch-action: none;
-  }
-
-  .tactics-token:hover,
-  .tactics-token:focus-visible {
-    z-index: 3;
-    box-shadow: 0 0 0 4px rgb(255 255 255 / 65%), 0 6px 12px rgb(16 26 46 / 35%);
-  }
-
-  .tactics-token:focus-visible {
-    outline: 2px solid var(--gold);
-    outline-offset: 3px;
-  }
-
-  .tactics-token.is-dragging {
-    z-index: 5;
-    cursor: grabbing;
-    transform: translate(-50%, -50%) scale(1.1);
-    box-shadow: 0 0 0 5px rgb(255 255 255 / 60%), 0 10px 18px rgb(16 26 46 / 40%);
-  }
-
-  .tactics-token__num {
-    font-size: clamp(1rem, 2vw, 1.35rem);
-    line-height: 1;
-  }
-
-  .tactics-token__name {
-    position: absolute;
-    top: calc(100% + 3px);
-    pointer-events: none;
-    padding: 1px 6px;
-    border-radius: 2px;
-    background: rgb(16 26 46 / 88%);
-    color: #fff;
-    font-family: var(--cjk);
-    font-size: 11px;
-    line-height: 1.5;
-    white-space: nowrap;
-  }
-
-  .tactics-toolbar {
-    display: flex;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 10px;
-    margin-top: 16px;
-  }
-
-  .tactics-action {
-    cursor: pointer;
-    font: inherit;
-  }
-
-  .tactics-status {
-    margin-left: auto;
-    color: var(--muted);
-    font-family: var(--mono);
-    font-size: 11px;
-    letter-spacing: 0.04em;
-  }
-
-  .tactics-bench {
-    margin-top: clamp(28px, 4vw, 46px);
-    padding-top: 20px;
-    border-top: 1px solid var(--rule);
-  }
-
-  /* 12 名现役一字排开：等分列宽，不换行，窄屏才允许横向滚动 */
-  .tactics-bench__list {
-    display: grid;
-    grid-template-columns: repeat(12, minmax(0, 1fr));
-    gap: 6px;
-    margin-top: 14px;
-  }
-
-  .tactics-chip {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    gap: 5px;
-    min-width: 0;
-    padding: 8px 5px;
-    border: 1px solid var(--rule-strong);
-    border-radius: 999px;
-    background: var(--paper);
-    color: var(--ink);
-    font: inherit;
-    font-family: var(--cjk);
-    font-size: 13px;
-    cursor: grab;
-    touch-action: none;
-    transition: border-color 140ms ease, background 140ms ease, color 140ms ease;
-  }
-
-  .tactics-chip:hover {
-    border-color: var(--ink);
-  }
-
-  .tactics-chip:focus-visible {
-    outline: 2px solid var(--gold);
-    outline-offset: 2px;
-  }
-
-  .tactics-chip.is-on {
-    border-style: dashed;
-    background: transparent;
-    color: var(--muted);
-  }
-
-  .tactics-chip__name {
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
-  }
-
-  .tactics-chip__num {
-    flex: 0 0 auto;
-    min-width: 1.7em;
-    padding: 2px 0;
-    border-radius: 999px;
-    background: var(--ink);
-    color: var(--paper);
-    font-family: var(--display);
-    font-size: 13px;
-    font-weight: 600;
-    text-align: center;
-  }
-
-  .tactics-chip.is-on .tactics-chip__num {
-    background: var(--muted);
-  }
-
-  /* 中等屏宽收窄到 8 列两行，比硬塞 12 列更好读 */
-  @media (max-width: 1180px) {
-    .tactics-bench__list {
-      grid-template-columns: repeat(8, minmax(0, 1fr));
-    }
-  }
-
-  @media (max-width: 700px) {
-    /* 手机上棋盘只有 ~350px 宽，棋子必须小一号才不互相压住 */
-    .tactics-token {
-      width: 34px;
-      height: 34px;
-      border-width: 1.5px;
-    }
-
-    .tactics-token__num {
-      font-size: 0.82rem;
-    }
-
-    /* 姓名缩到圆下方一行小字，撑不开也不重叠 */
-    .tactics-token__name {
-      top: calc(100% + 1px);
-      padding: 0 3px;
-      font-size: 9px;
-      line-height: 1.7;
-      letter-spacing: 0;
-    }
-
-    .tactics-status {
-      width: 100%;
-      margin-left: 0;
-    }
-
-    /* 手机上 12 列挤不下，回到可换行的药丸，手指也好点 */
-    .tactics-bench__list {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 7px;
-    }
-
-    .tactics-chip {
-      flex: 0 0 auto;
-      padding: 7px 12px 7px 8px;
-    }
-  }
-</style>

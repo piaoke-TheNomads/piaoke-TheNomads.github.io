@@ -1,0 +1,61 @@
+---
+import MatchCard from "./MatchCard.astro";
+import { MATCH_STATUS, MATCH_STAGES } from "../lib/matches.js";
+import { seasonsList } from "../lib/data";
+import "../styles/matches.css";
+const { matches, season = null } = Astro.props;
+const competitions = [...new Set(matches.map((match) => match.competition))];
+---
+<div class="match-browser" data-match-browser data-fixed-season={season ?? ""}>
+  <form class="match-filters" hidden>
+    {!season && <label>赛季<select name="season" disabled={!matches.length}><option value="">全部赛季</option>{seasonsList.map((item) => <option value={item.id}>{item.label}</option>)}</select></label>}
+    <label>比赛状态<select name="status" disabled={!matches.length}><option value="">全部状态</option>{Object.entries(MATCH_STATUS).map(([key, label]) => <option value={key}>{label}</option>)}</select></label>
+    <label>赛事阶段<select name="stage" disabled={!matches.length}><option value="">全部阶段</option>{Object.entries(MATCH_STAGES).map(([key, label]) => <option value={key}>{label}</option>)}</select></label>
+    {competitions.length > 1 && <label>赛事<select name="competition"><option value="">全部赛事</option>{competitions.map((name) => <option value={name}>{name}</option>)}</select></label>}
+    <button class="match-reset" type="reset" disabled={!matches.length}>清除筛选</button>
+  </form>
+  <p class="match-count" aria-live="polite" data-match-count>{matches.length ? `共 ${matches.length} 场比赛` : ""}</p>
+  <div class="match-list">{matches.map((match) => <MatchCard match={match} showSeason={!season} />)}</div>
+  <p class="match-empty" data-match-empty hidden={matches.length > 0}>{matches.length ? "没有符合筛选条件的比赛。" : "尚未收录逐场比赛。"}</p>
+</div>
+<script>
+  import { filterMatches } from "../lib/matches.js";
+  document.querySelectorAll<HTMLElement>("[data-match-browser]").forEach((browser) => {
+    const form = browser.querySelector<HTMLFormElement>("form");
+    const cards = [...browser.querySelectorAll<HTMLElement>(".match-card")];
+    const empty = browser.querySelector<HTMLElement>("[data-match-empty]");
+    const count = browser.querySelector<HTMLElement>("[data-match-count]");
+    if (!form || !empty || !count) return;
+    form.hidden = false;
+    const selects = [...form.querySelectorAll<HTMLSelectElement>("select")];
+    const loadQuery = () => {
+      const params = new URLSearchParams(location.search);
+      selects.forEach((select) => {
+        const value = params.get(select.name) ?? "";
+        select.value = [...select.options].some((option) => option.value === value) ? value : "";
+      });
+    };
+    const apply = (updateURL = false) => {
+      const filters = Object.fromEntries(selects.map((select) => [select.name, select.value]));
+      const visible = new Set(filterMatches(cards.map((card) => ({ ...card.dataset })), filters));
+      // Compare IDs, since filterMatches returns the supplied objects without cloning them.
+      const ids = new Set([...visible].map((match) => match.matchId));
+      cards.forEach((card) => { card.hidden = !ids.has(card.dataset.matchId); });
+      count.textContent = cards.length ? `显示 ${ids.size} / ${cards.length} 场比赛` : "";
+      empty.hidden = ids.size > 0;
+      if (updateURL) {
+        const url = new URL(location.href);
+        selects.forEach((select) => select.value ? url.searchParams.set(select.name, select.value) : url.searchParams.delete(select.name));
+        history.replaceState(null, "", url);
+      }
+    };
+    form.addEventListener("submit", (event) => { event.preventDefault(); apply(true); });
+    form.addEventListener("change", () => apply(true));
+    form.addEventListener("reset", () => {
+      selects.forEach((select) => { select.value = ""; });
+      apply(true);
+    });
+    window.addEventListener("popstate", () => { loadQuery(); apply(); });
+    loadQuery(); apply();
+  });
+</script>

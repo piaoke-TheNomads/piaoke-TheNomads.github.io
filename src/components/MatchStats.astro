@@ -1,0 +1,17 @@
+---
+const { summary } = Astro.props;
+const rows = [
+  ...(summary.stages.some((stage) => stage.key !== "friendly") ? [{ label: "正式比赛合计", ...summary.totals }] : []),
+  ...summary.stages,
+];
+---
+{summary.records.length > 0 && <div class="match-statistics">
+  <h3>{summary.isComplete ? "赛季比赛统计" : "已收录比赛统计"}</h3>
+  <p class="match-scope">{summary.isComplete ? "逐场记录已完整收录。" : "仅统计已收录且比分完整的已结束比赛。"}友谊赛单列，点球决胜按赛场比分计为平局。</p>
+  <div class="match-table-scroll" tabindex="0" role="region" aria-label="分阶段比赛统计">
+    <table class="table match-stats-table">
+      <thead><tr><th scope="col">阶段</th><th scope="col" class="num">场</th><th scope="col" class="num">胜</th><th scope="col" class="num">平</th><th scope="col" class="num">负</th><th scope="col" class="num">进球</th><th scope="col" class="num">失球</th><th scope="col" class="num">净胜球</th></tr></thead>
+      <tbody>{rows.map((row) => <tr><th scope="row">{row.label}</th><td class="num">{row.played}</td><td class="num">{row.wins}</td><td class="num">{row.draws}</td><td class="num">{row.losses}</td><td class="num">{row.goalsFor}</td><td class="num">{row.goalsAgainst}</td><td class="num">{row.goalDifference > 0 ? `+${row.goalDifference}` : row.goalDifference}</td></tr>)}</tbody>
+    </table>
+  </div>
+</div>}

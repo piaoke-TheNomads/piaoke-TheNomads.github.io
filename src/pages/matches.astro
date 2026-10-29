@@ -1,0 +1,18 @@
+---
+import Base from "../layouts/Base.astro";
+import MatchList from "../components/MatchList.astro";
+import { matchesList } from "../lib/match-data.js";
+---
+<Base title="比赛" description="球门飘客的比赛安排、逐场比分和赛事记录。" active="matches">
+  <section class="wrap">
+    <div class="page-head">
+      <p class="label page-head__kicker">Matches · 比赛</p>
+      <h1>赛程与赛果</h1>
+      <p class="lede page-head__dek">比赛安排与逐场记录。</p>
+    </div>
+    <div class="section section--tight">
+      <MatchList matches={matchesList} />
+      <p class="match-timezone">比赛时间均为北京时间（UTC+8）。</p>
+    </div>
+  </section>
+</Base>

@@ -1,12 +1,17 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { seasonsList, honorsList, site } from "../../lib/data";
+import { seasonsList, honorsList } from "../../lib/data";
+import { matchesList } from "../../lib/match-data.js";
+import { seasonSummary } from "../../lib/matches.js";
+import MatchList from "../../components/MatchList.astro";
+import MatchStats from "../../components/MatchStats.astro";
 
 export function getStaticPaths() {
   return seasonsList.map((s) => ({ params: { season: s.id }, props: { season: s } }));
 }
 
 const { season } = Astro.props;
+const summary = seasonSummary(season, matchesList);
 const seasonHonors = honorsList.filter((h) => h.season === season.id);
 const i = seasonsList.findIndex((s) => s.id === season.id);
 const older = seasonsList[i + 1] ?? null; // 列表按赛季倒序，+1 是更早的赛季
@@ -15,7 +20,7 @@ const newer = seasonsList[i - 1] ?? null;
 
 <Base
   title={`${season.label} 赛季`}
-  description={`球门飘客 ${season.label} 赛季：${season.result}。`}
+  description={`球门飘客 ${season.label} 赛季的成绩、赛程与逐场比赛记录。`}
   active="seasons"
 >
   <section class="wrap">
@@ -25,7 +30,7 @@ const newer = seasonsList[i - 1] ?? null;
       </p>
       <div class="season-head">
         <h1>{season.label} 赛季</h1>
-        <span class="season-head__result">{season.result}</span>
+        {season.result && <span class="season-head__result">{season.result}</span>}
       </div>
     </div>
 
@@ -35,11 +40,11 @@ const newer = seasonsList[i - 1] ?? null;
           <span class="num stats__num">
             {season.rank ?? "—"}
           </span>
-          <p class="label stats__key">最终名次</p>
+          <p class="label stats__key">{season.status === "completed" ? "最终名次" : "当前名次"}</p>
         </div>
         <div class="stats__cell">
-          <span class="num stats__num">{season.played ?? "—"}</span>
-          <p class="label stats__key">场次</p>
+          <span class="num stats__num">{summary.played ?? "—"}</span>
+          <p class="label stats__key">{summary.isComplete ? "已赛正式比赛" : "赛事记录场次"}</p>
         </div>
         <div class="stats__cell">
           <span class="num stats__num">{season.teams ?? "—"}</span>
@@ -77,6 +82,16 @@ const newer = seasonsList[i - 1] ?? null;
             )
           }
         </div>
+      </div>
+
+      <div style="margin-top:clamp(36px,5vw,60px)">
+        <div class="section__head">
+          <div><p class="label">Matches · 比赛</p><h2 style="margin-top:10px">本赛季比赛</h2></div>
+          <a class="section__more" href={`/matches?season=${season.id}`}>全部比赛 →</a>
+        </div>
+        <MatchStats summary={summary} />
+        <MatchList matches={summary.records} season={season.id} />
+        <p class="match-timezone">比赛时间均为北京时间（UTC+8）。</p>
       </div>
 
       <div class="pager" style="margin-top:clamp(30px,4vw,52px)">

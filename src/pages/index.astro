@@ -1,5 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
+import MatchHighlights from "../components/MatchHighlights.astro";
+import { matches } from "../lib/match-data.js";
+import { seasonSummary } from "../lib/matches.js";
 import {
   site,
   roster,
@@ -48,6 +51,8 @@ const latest = seasonsList[0];
       </div>
     </div>
   </section>
+
+  <MatchHighlights />
 
   <section class="section">
     <div class="wrap">
@@ -102,7 +107,7 @@ const latest = seasonsList[0];
       <div class="section__head">
         <div>
           <p class="label">Seasons · 赛季</p>
-          <h2 style="margin-top:10px">四个赛季</h2>
+          <h2 style="margin-top:10px">{stats.seasons} 个赛季</h2>
         </div>
         <a class="section__more" href="/seasons">赛季详情 →</a>
       </div>
@@ -120,7 +125,7 @@ const latest = seasonsList[0];
             seasonsList.map((s) => (
               <tr>
                 <td><a class="table__link" href={`/seasons/${s.id}`}>{s.label}</a></td>
-                <td class="num">{s.played ?? "—"}</td>
+                <td class="num">{seasonSummary(s, matches).played ?? "—"}</td>
                 <td class="num">{s.rank ?? "—"}</td>
               </tr>
             ))
@@ -137,7 +142,7 @@ const latest = seasonsList[0];
           <p class="label">Tactics · 战术板</p>
           <h2 style="margin-top:10px">排一套八人制站位</h2>
           <p class="lede" style="margin-top:12px">
-            拖动 1 至 8 号棋子安排位置，布局会保存在当前浏览器中，也可以导出为文件。
+            拖动球员棋子安排八人制站位，保存多套阵容，导出图片与队友分享。
           </p>
         </div>
         <a class="btn btn--solid" href="/tactics">打开战术板 →</a>

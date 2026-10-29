@@ -1,167 +1,74 @@
 # 球门飘客 · GOAL FUCKER
 
-上海科技大学「报国杯」足球队的官网。Astro 静态站，数据驱动，无后端、无跟踪、无 Cookie。
+上海科技大学报国杯球队网站。使用 Astro 静态生成，通过 GitHub Pages 发布：
+https://piaoke-thenomads.github.io/
 
----
-
-## 跑起来
-
-```bash
-npm install        # 首次
-npm run dev        # 本地开发 http://localhost:4321
-npm run build      # 产出 dist/（34 个页面）
-npm run check      # 数据体检：号码/位置/赛季/荣誉一致性
-npm run preview    # 预览 dist/
-```
-
-截图与上线前体检（需要先 `npm run preview` 或起一个静态服务）：
+## 开发与检查
 
 ```bash
-node tools/shoot.mjs http://127.0.0.1:4321/ out.png 1440 1   # 宽 1440、整页
-npm run audit -- http://127.0.0.1:4321                        # 控制台报错 / alt / 死链 / 字体
+npm ci
+npm run dev                      # 本地开发，默认 http://localhost:4321
+npm run verify                   # 数据校验、功能单测、正式构建
+npm run preview                  # 预览 dist/
+npm run audit -- http://localhost:4321
+npm run test:tactics -- http://localhost:4321/tactics/
+npm run test:tactics-image        # 独立验证 PNG 导出
 ```
 
----
+`audit` 检查页面、图片、控制台和内链。`test:tactics` 使用隔离的浏览器环境检查排阵、换人、人数限制、方案保存、迁移、备份和导图。浏览器检查需要本机已安装 Playwright Chromium。
 
-## 目录
+## 内容与目录
 
-```
-data/            所有内容都在这里，改 JSON 不用碰页面
-  site.json      队名、城市、学校、赛事、slogan
-  players.json   23 人：number / name / position / photo / joined
-  honors.json    5 项荣誉
-  seasons.json   4 个赛季：场次、名次、参赛队数、结果
-  staff.json     队内职衔
-  album.json     相册：file / w / h / caption / group
-  players.todo.csv   给球队填的模板（位置/照片/加入年份）
-src/
-  pages/         首页、名单、球员页、赛季、荣誉、相册、关于、404
-  layouts/Base.astro
-  lib/data.js    读 JSON、排序、派生统计
-  styles/global.css   设计系统（配色/字体/组件/响应式）
-public/
-  photos/        压缩后的 webp（800 / 1600 两档）
-  crest/         队徽：原尺寸、256、1200×630 分享卡
-  fonts/         自托管 woff2（国内不打 Google CDN）
-tools/
-  check-data.mjs     数据一致性
-  check-players.mjs  名单字段体检
-  process-images.py  原图 → webp（Pillow）
-  extract-crest.py   队徽 → 圆形徽章
-  make-todo-csv.mjs  生成待填模板
-  shoot.mjs          截图（playwright）
-  audit.mjs          上线前体检
-```
+- `data/players.json`：球员稳定 ID、号码、姓名、位置及现役状态。
+- `data/seasons.json`：官方赛季汇总、赛季状态及逐场数据覆盖情况。
+- `data/matches.json`：逐场赛程与赛果，录入方式见 [比赛数据说明](docs/matches.md)。
+- `data/site.json`、`honors.json`、`staff.json`、`album.json`：球队介绍、荣誉、职衔、相册。
+- `src/pages/`：首页、名单、球员页、比赛、赛季、战术板、荣誉、相册和关于。
+- `src/lib/`：数据、战术状态、导图和比赛统计。
+- `public/`：自托管字体、队徽、压缩后的照片。
 
----
+## 球员资料
 
-## 改内容
-
-**加一个球员**：往 `data/players.json` 里加一段，`number` 不能重复。
+每个球员的 `id` 创建后保持不变。修改姓名、球衣号码或位置时，不要重新生成 ID；战术方案通过 ID 识别球员。
 
 ```json
-{ "number": 21, "name": "张三", "position": "MF", "photo": "image10-800.webp", "joined": 2024 }
+{
+  "id": "p-example-new-player",
+  "number": 21,
+  "name": "示例球员",
+  "status": "active",
+  "position": "CM",
+  "positions": ["CM", "DM"],
+  "photo": null,
+  "joined": null
+}
 ```
 
-`position` 只能是 `GK` `DF` `MF` `FW`（或 `null`，页面会显示「位置待补」）。
-`photo` 填 `public/photos/` 下的文件名，留 `null` 就显示斜纹占位。
+示例仅用于说明字段，不加入正式名单。号码范围为 1–99，可为 `null`，有号码的球员号码不能重复。位置代码为 `GK/CB/LB/RB/FB/DM/CM/AM/LM/RM/ST`，`position` 表示主位置，`positions` 表示可兼任位置。`status` 为 `active`（现役）、`retired`（退役）或 `null`（未确认）。没有提供的资料留空。
 
-**加荣誉**：往 `data/honors.json` 加一条，`season` 必须是 `data/seasons.json` 里已有的赛季，否则 `npm run check` 会报错。
+## 战术板
 
-**加照片**：跑 `python3 tools/process-images.py` 把新图压成 webp 放进 `public/photos/`，
-再往 `data/album.json` 的 `items` 里加一条（`w`/`h` 填真实像素宽高，避免图片加载时页面跳动）。
-相册是三列瀑布流，点开是大图，方向键翻页、Esc 关闭。手机上自动变单列大图。
+- 默认按位置安排门将加 3-2-2，主位置优先于兼任位置。场上最多八人，手动站位不受球员登记位置限制。
+- 拖动场内棋子调整站位或换位，替补拖到场内棋子上可换人；满员时不能再拖到空地上场。
+- 支持多套方案、重命名、另存、删除撤销和阵型模板。每套方案独立保存。
+- 方案只保存在当前浏览器。通过备份文件导入、导出可以换设备继续编辑；PNG 用于查看和分享，不能当作可编辑备份导入。
+- 图片先生成预览，支持文件分享的浏览器可调用系统分享，否则下载或保存预览图片。
+- 旧版 `qmpk-tactics-v2` 布局会迁入新版方案库，并保留迁移前的原文备份。浏览器禁止存储时会提示，仍可继续操作和导出。
 
-**加赛季**：往 `data/seasons.json` 加一条。`played` / `rank` / `teams` 不知道就写 `null`，页面会显示 `—`，**不会编造数字**。
+## 比赛与赛季
 
-改完跑 `npm run check && npm run build`。
+正式比赛数据目前尚未逐场录入。页面保留已确认的历史场次、名次和荣誉，不使用示例比赛充数。
 
----
+比赛数据补齐后，首页显示最近赛果和下一场，比赛页可筛选，赛季页显示逐场记录和分组统计。只有已结束且比分完整的比赛计入胜平负和进失球；点球大战另记。历史逐场数据不完整时，不覆盖官方赛季汇总。具体字段、覆盖状态、校验规则及填写模板见 [比赛数据说明](docs/matches.md)。
 
-## 部署（Cloudflare Pages，不用备案）
+## 照片与荣誉
 
-```bash
-npm i -g wrangler
-npm run build
-npx wrangler pages deploy dist --project-name qmpk
-```
+照片放在 `public/photos/`，在 `data/album.json` 中登记文件名、实际宽高、图注和分类。可使用 `tools/process-images.py` 压缩照片。球员头像通过 `photo` 字段指定文件名。
 
-首次会让你登录 Cloudflare。上去之后会拿到 `qmpk.pages.dev`。
+新增荣誉时，`season` 必须对应已存在的赛季。队徽目前是圆形裁切图，有透明或矢量源文件后可以替换 `public/crest/` 中的资源。
 
-绑定自定义域名：Cloudflare Pages 项目 → Custom domains → 加 `qmpk.club`（或你自己的域名），
-CNAME 指到 `qmpk.pages.dev` 即可。`.club` 域名在 Cloudflare 注册约 ¥70/年。
+## 发布
 
-不想用 Cloudflare 也可以拖 `dist/` 到 Netlify Drop，或 `vercel deploy dist`。
-`public/_headers` 已经配好字体与图片的一年强缓存，Cloudflare Pages 和 Netlify 都认。
+`.github/workflows/deploy.yml` 在 `main` 更新时运行数据校验、单测及 Astro 构建，然后发布至 GitHub Pages。发布前运行 `npm run verify` 和相关浏览器检查；推送后查看对应提交的 Actions 结果。
 
----
-
-## 上线：三条路，按你的情况挑一条
-
-站点是纯静态的（`dist/` 里全是 HTML/CSS/图片，没有后端、没有数据库），所以能托管在任何静态托管上。
-`site` 地址由 `astro.config.mjs` 里的 `SITE_URL` 环境变量决定，换托管只需要换这一个值。
-
-### 路线 A · 国内访问最稳：有备案域名 + 国内托管
-
-适合"要发给同学、对手、学校公众号，必须人人都能秒开"。
-
-1. 买域名（阿里云 / 腾讯云，`.club` / `.com` 约 50–80 元/年）
-2. 备案（个人备案约 2–4 周，需要身份证与人脸核验，**只能在你的账号下办**）
-3. 托管选阿里云 OSS / 腾讯云 COS 的静态网站功能，或 Vercel/Netlify 绑备案域名走国内节点
-4. `SITE_URL=https://你的域名 npx astro build`，再把 `dist/` 传上去
-
-### 路线 B · 免费且不用管服务器：Cloudflare Pages 或 Netlify
-
-- 打开 <https://pages.cloudflare.com> 或 <https://app.netlify.com>，用 GitHub 登录
-- 选"导入 Git 仓库"→ 选球队仓库 → 构建命令 `npm run build`、输出目录 `dist`
-- 每次 `git push` 自动重新部署
-- 免费额度：带宽和请求数对球队官网来说远用不完
-- 上线后拿到 `xxx.pages.dev` 或 `xxx.netlify.app`，之后可以绑自己的域名
-
-### 路线 C · 不要额外账号：GitHub Pages
-
-仓库里已经放好 `.github/workflows/deploy.yml`，推上去就能自动部署。
-
-1. 在 GitHub 新建**组织的**仓库（不是个人仓库），名字必须是 `piaoke-TheNomads.github.io`
-2. `git remote add origin git@github.com:piaoke-TheNomads/piaoke-TheNomads.github.io.git && git push -u origin main`
-3. 仓库 Settings → Pages → Source 选 **GitHub Actions**
-4. 几分钟后网址是 `https://piaoke-thenomads.github.io/`
-
-> **仓库名为什么必须是 `<组织名>.github.io`**：这种仓库发布在域名根路径（`https://xxx.github.io/`），
-> 站内所有绝对路径（`/squad/`、`/photos/...`）直接可用。如果仓库叫 `site`，网址会变成
-> `https://xxx.github.io/site/`，所有绝对路径都要加 `base` 前缀才对，等于要把全站链接重写一遍。
-> 想要短网址就选前者。
-
-> 为什么建议用组织：组织账号归球队，管理员可以有好几个，谁毕业了都能交接；
-> 个人仓库挂在你的账号下，你走了网站就悬着了。个人仓库也能用，只是别忘了交接。
-
-### 我在本机验证过的三条命令
-
-```bash
-npm run build                                   # 产 dist/
-npx wrangler pages deploy dist --project-name qmpk       # 路线 B（Cloudflare）
-npx netlify deploy --prod --dir=dist                     # 路线 B（Netlify）
-```
-
-## 还缺什么（球队补，补齐页面自动显示）
-
-| 字段 | 影响 | 怎么给 |
-|---|---|---|
-| 位置 | 名单页按位置筛、球员页显示位置 | 填 `data/players.todo.csv` 第 3 列 |
-| 照片对应 | 球员头像 | 填 CSV 第 4 列 |
-| 加入年份 | 球员页「队龄」 | 填 CSV 第 5 列 |
-| 逐场比分 | 赛季页的胜平负与进失球（现在留空，不显示 0） | 给一张赛程表 |
-| 职衔对应到人 | 关于页的 5 张卡目前只有头衔没有名字 | 告诉我谁当教练/老板 |
-| 2022-23 赛事全称 | 荣誉页赛事字段留空 | 确认那年叫什么杯 |
-| 现役状态 | 还有 8 人状态未确认（李可萱、刘若尘、姚立方、聂晓滨、张天龙、沈锋、周道远、赵钧正），填 `data/players.json` 的 `status` |
-| 号码 | 杨思谙、黄思源两位退役球员号码未确认，`number` 为 `null`，暂不开详情页 |
-| 联系方式 | 页脚现在没有邮箱/公众号入口 | 想放就填 `data/site.json` 的 `contact` |
-
----
-
-## 已知取舍
-
-- **队徽是圆形徽章裁切，不是透明底**。原图是「队徽压在虚化草皮上」的照片，背景那块深色球网和队徽藏蓝几乎同色且像素级相连，自动抠图 11 轮都去不掉。等有透明底 / 矢量源文件再换，届时只替换 `public/crest/` 里的文件即可。
-- **不显示胜平负与进失球**。有截图但截图已经不在手里，编数字比留白更糟，所以 `record` 字段留 `null`，页面上明写了「需要逐场比分才能填」。
-- **没有球员合影以外的照片来源**。照片墙三张是从 PPT 里挑的，球队给新照片后跑 `tools/process-images.py` 再改 `index.astro` 的引用。
-- 站内保留 GOAL FUCKER，对外称呼用「球门飘客 / QMPK」。
+`astro.config.mjs` 中的站点地址默认是当前 GitHub Pages 域名，部署到其他域名可通过 `SITE_URL` 覆盖。

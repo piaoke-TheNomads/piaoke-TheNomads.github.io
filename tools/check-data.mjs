@@ -13,8 +13,12 @@ const fail = (msg) => { console.log("  ✗ " + msg); bad++; };
 const POS = ["GK", "CB", "LB", "RB", "FB", "DM", "CM", "AM", "LM", "RM", "ST"];
 const STATUS = ["active", "retired"];
 const seen = new Set();
+const playerIds = new Set();
 let noNumber = 0;
 for (const p of players) {
+  if (typeof p.id !== "string" || !/^[a-zA-Z0-9_-]{3,64}$/.test(p.id)) fail(`球员 ID 不合法：${p.name}`);
+  if (playerIds.has(p.id)) fail(`球员 ID 重复：${p.id}`);
+  playerIds.add(p.id);
   if (!p.name || !p.name.trim()) fail(`缺姓名：${p.number ?? "(无号码)"}`);
   if (p.number == null) {
     noNumber++;
@@ -24,7 +28,9 @@ for (const p of players) {
     seen.add(p.number);
   }
   if (p.status != null && !STATUS.includes(p.status)) fail(`状态不认识：${p.name} ${p.status}`);
-  const codes = p.positions ?? (p.position ? [p.position] : []);
+  if (p.position != null && !POS.includes(p.position)) fail(`主位置不认识：${p.name} ${p.position}`);
+  if (p.positions != null && !Array.isArray(p.positions)) fail(`兼任位置必须为数组：${p.name}`);
+  const codes = Array.isArray(p.positions) ? p.positions : [];
   for (const c of codes) if (!POS.includes(c)) fail(`位置不认识：${p.name} ${c}`);
 }
 
@@ -36,11 +42,16 @@ for (const p of players) {
 }
 
 // 2. 赛季名次与场次
+const seasonIds = new Set();
 for (const s of seasons) {
   if (!/^\d{4}-\d{2}$/.test(s.id)) fail(`赛季名格式不对：${s.id}`);
-  if (s.played != null && s.played <= 0) fail(`${s.id} 场次不合法`);
+  if (seasonIds.has(s.id)) fail(`赛季重复：${s.id}`);
+  seasonIds.add(s.id);
+  if (s.status != null && !["planned", "ongoing", "completed"].includes(s.status)) fail(`${s.id} 赛季状态不合法`);
+  if (s.played != null && (!Number.isInteger(s.played) || s.played < 0)) fail(`${s.id} 场次不合法`);
+  if (s.teams != null && (!Number.isInteger(s.teams) || s.teams < 1)) fail(`${s.id} 参赛队数不合法`);
+  if (s.rank != null && (!Number.isInteger(s.rank) || s.rank < 1)) fail(`${s.id} 名次不合法`);
   if (s.rank != null && s.teams != null && s.rank > s.teams) fail(`${s.id} 名次大于参赛队数`);
-  if (s.rank != null && s.played != null && s.played < s.teams - 1) fail(`${s.id} 场次少于单循环下限`);
 }
 
 // 3. 荣誉的赛季必须在赛季表里

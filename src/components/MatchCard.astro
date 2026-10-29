@@ -1,0 +1,27 @@
+---
+import { site } from "../lib/data";
+import { MATCH_STATUS, MATCH_STAGES, RESULT_LABEL, formatMatchDate, hasScore, matchResult } from "../lib/matches.js";
+const { match, showSeason = true } = Astro.props;
+const result = matchResult(match);
+---
+<article class="match-card" data-match-id={match.id} data-season={match.season} data-status={match.status} data-stage={match.stage} data-competition={match.competition}>
+  <div class="match-card__meta">
+    <p>{showSeason && <a href={`/seasons/${match.season}`}>{match.season} · </a>}{match.competition} · {MATCH_STAGES[match.stage]}</p>
+    <span class="match-status" data-status={match.status}>{MATCH_STATUS[match.status]}</span>
+  </div>
+  <div class="match-card__contest">
+    <span class="match-card__team">{site.name}</span>
+    <div class="match-card__score">
+      <span class="num">{hasScore(match) ? `${match.score.for} : ${match.score.against}` : "VS"}</span>
+      {result && <span class="match-outcome" data-result={result}>{RESULT_LABEL[result]}</span>}
+      {match.status === "finished" && !hasScore(match) && <span class="match-card__detail">比分未收录</span>}
+      {match.penalties && <span class="match-card__detail">点球 {match.penalties.for} : {match.penalties.against}</span>}
+    </div>
+    <span class="match-card__team match-card__team--opponent">{match.opponent}</span>
+  </div>
+  <div class="match-card__footer">
+    <p>{match.date ? <time datetime={`${match.date}${match.time ? `T${match.time}:00+08:00` : ""}`}>{formatMatchDate(match)}</time> : "日期待定"}</p>
+    {match.venue && <p>{match.venue}</p>}
+  </div>
+  {(match.originalDate || match.note) && <p class="match-card__note">{match.originalDate && `原定 ${formatMatchDate({ date: match.originalDate, time: match.originalTime })}。`}{match.note}</p>}
+</article>

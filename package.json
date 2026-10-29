@@ -7,10 +7,13 @@
     "dev": "astro dev",
     "build": "astro build",
     "preview": "astro preview",
-    "check": "node tools/check-data.mjs && node tools/check-players.mjs",
+    "check": "node tools/check-data.mjs && node tools/check-players.mjs && node tools/check-matches.mjs",
+    "test": "node --test tools/test-tactics.mjs tools/test-matches.mjs",
+    "test:tactics": "node tools/check-tactics.mjs",
     "audit": "node tools/audit.mjs",
     "shoot": "node tools/shoot.mjs",
-    "verify": "npm run check && npm run build"
+    "verify": "npm run check && npm test && npm run build",
+    "test:tactics-image": "node tools/test-tactics-image.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",

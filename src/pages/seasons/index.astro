@@ -1,6 +1,9 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { seasonsList, stats } from "../../lib/data";
+import { matches } from "../../lib/match-data.js";
+import { MATCH_COVERAGE, seasonSummary } from "../../lib/matches.js";
+import "../../styles/matches.css";
 ---
 
 <Base
@@ -13,7 +16,7 @@ import { seasonsList, stats } from "../../lib/data";
       <p class="label page-head__kicker">Seasons · 赛季</p>
       <h1>{stats.seasons} 个赛季</h1>
       <p class="lede page-head__dek">
-        页面记录各赛季的参赛场次与最终名次。
+        各赛季的成绩汇总与逐场比赛记录。
       </p>
     </div>
 
@@ -34,14 +37,17 @@ import { seasonsList, stats } from "../../lib/data";
                   <a href={`/seasons/${s.id}`} class="table__link">
                     {s.label}
                   </a>
+                  <span class="match-season-coverage">逐场比赛 · {MATCH_COVERAGE[seasonSummary(s, matches).coverage]}</span>
                 </td>
-                <td class="num">{s.played ?? "—"}</td>
+                <td class="num">{seasonSummary(s, matches).played ?? "—"}</td>
                 <td class="num">{s.rank ?? "—"}</td>
               </tr>
             ))
           }
         </tbody>
       </table>
+      <p class="match-scope">逐场记录完整的赛季按已结束的正式比赛统计场次；其他赛季保留赛事积分榜的场次记录。</p>
+      <a class="btn" href="/matches">查看全部比赛 →</a>
     </div>
   </section>
 </Base>
