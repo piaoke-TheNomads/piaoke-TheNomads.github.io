@@ -1,5 +1,6 @@
 import { STORAGE_KEY, LEGACY_KEY, MAX_PLANS, MAX_BACKUP_BYTES, FORMATIONS, copy, clamp, cleanName, makePlan, makeLibrary, defaultPlacements, applyDrop, applyFormation, parseBackup, migrateLegacy, appendPlans } from '../lib/tactics.js';
 import { createTacticsImage } from '../lib/tactics-image.js';
+import { initializeMarkings } from './tactics-markings.js';
 
 const root = document.querySelector('.tactics-page');
 if (root) initialize();
@@ -17,6 +18,8 @@ function initialize() {
   const current = () => library.plans.find((p) => p.id === library.activeId);
   const describe = (id) => { const p = playerMap.get(id); return p ? `${p.number ?? '—'} 号 ${p.name}` : ''; };
   const say = (message, error = false) => { status.textContent = message; status.classList.toggle('is-error', error); };
+
+  const markings = initializeMarkings({ board, getPlan: current, change: (edit, message) => change(() => edit(current()), message), say, onToolChange: () => { cancelPlayerDrag(); selectedId = null; render(); } });
 
   function persist(message = '') {
     try {
@@ -72,11 +75,30 @@ function initialize() {
       say('无法读取原有方案，已保留原始记录并显示默认阵容。可导入备份恢复，或编辑后保存新阵容。', true);
     }
   }
+  function cancelPlayerDrag() {
+    if (!drag) return false;
+    const previous = drag; drag = null;
+    try { previous.source.releasePointerCapture(previous.pointerId); } catch { /* Capture may already be released. */ }
+    if (previous.fromBench && previous.moved) previous.el.remove();
+    previous.source.classList.remove('is-dragging');
+    return true;
+  }
+  window.addEventListener('blur', () => { if (cancelPlayerDrag()) render(); });
+  window.addEventListener('lostpointercapture', (event) => {
+    if (drag?.pointerId === event.pointerId && cancelPlayerDrag()) render();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && cancelPlayerDrag()) {
+      event.preventDefault(); event.stopImmediatePropagation(); render();
+    }
+  }, true);
   function remember() {
     history.push(copy(library));
     if (history.length > 30) history.shift();
   }
   function change(mutator, message) {
+    markings.cancel();
+    cancelPlayerDrag();
     remember();
     mutator();
     current().updatedAt = new Date().toISOString();
@@ -107,14 +129,20 @@ function initialize() {
       const option = element('option', '', plan.name); option.value = plan.id; return option;
     }));
     planSelect.value = library.activeId;
-    const plan = current(); formationSelect.value = plan.formation;
+    const plan = current();
+    formationSelect.querySelector('[data-legacy-formation]')?.remove();
+    if (plan.formation === '2-3-2') {
+      const legacy = element('option', '', '2–3–2（原有方案）');
+      legacy.value = '2-3-2'; legacy.dataset.legacyFormation = ''; formationSelect.append(legacy);
+    }
+    formationSelect.value = plan.formation;
     onfield.replaceChildren(...plan.placements.map((p) => token(p.playerId, p)));
     const active = new Set(plan.placements.map((p) => p.playerId));
     bench.replaceChildren(...players.map((p) => {
       const chip = element('button', 'tactics-chip'); chip.type = 'button';
       chip.dataset.playerId = p.id; chip.dataset.number = String(p.number ?? '');
       chip.classList.toggle('is-on', active.has(p.id)); chip.classList.toggle('is-selected', selectedId === p.id);
-      chip.setAttribute('aria-label', `${describe(p.id)}，${p.positionLabel}，${active.has(p.id) ? '已在场上' : '替补，选择后安排上场'}`);
+      chip.setAttribute('aria-label', `${describe(p.id)}${p.positionLabel ? `，${p.positionLabel}` : ""}，${active.has(p.id) ? '已在场上' : '替补，选择后安排上场'}`);
       chip.setAttribute('aria-pressed', String(selectedId === p.id));
       chip.append(element('span', 'tactics-chip__num num', p.number ?? '—'), element('span', 'tactics-chip__name', p.name), element('span', 'tactics-chip__position', p.positionLabel));
       return chip;
@@ -124,6 +152,7 @@ function initialize() {
     $('[data-action="remove"]').disabled = !active.has(selectedId);
     $('[data-action="cancel-selection"]').hidden = !selectedId;
     $('[data-selection]').textContent = selectedId ? `${describe(selectedId)} · ${active.has(selectedId) ? '场上' : '选择场上位置或队员'}` : '选择队员后可安排上场或下场';
+    markings.render();
     if (restoreId) {
       const candidates = restoreField ? onfield.children : bench.children;
       [...candidates].find((p) => p.dataset.playerId === restoreId)?.focus({ preventScroll: true });
@@ -135,6 +164,7 @@ function initialize() {
     change(() => { current().placements = current().placements.filter((p) => p.playerId !== id); selectedId = null; }, `${describe(id)}已下场`);
   }
   function activate(id, fromBench) {
+    if (markings.tool !== 'move') markings.setTool('move');
     const on = current().placements.some((p) => p.playerId === id);
     const selectedIsBench = selectedId && !current().placements.some((p) => p.playerId === selectedId);
     if (!fromBench && selectedIsBench && selectedId !== id) {
@@ -174,7 +204,8 @@ function initialize() {
   }
   function begin(e, fromBench) {
     const source = e.target.closest(fromBench ? '.tactics-chip' : '.tactics-token');
-    if (!source || drag || e.button !== 0) return;
+    if (!source || drag || e.button !== 0 || !e.isPrimary) return;
+    if (markings.tool !== 'move') { if (fromBench) markings.setTool('move'); else return; }
     const id = source.dataset.playerId;
     if (fromBench && current().placements.some((p) => p.playerId === id)) return;
     e.preventDefault(); source.focus({ preventScroll: true });
@@ -227,7 +258,7 @@ function initialize() {
     });
   }
   board.addEventListener('click', (e) => {
-    if (Date.now() < suppressClickUntil || e.target.closest('.tactics-token') || !selectedId || current().placements.some((p) => p.playerId === selectedId)) return;
+    if (markings.tool !== 'move' || e.target.closest('[data-ball]') || Date.now() < suppressClickUntil || e.target.closest('.tactics-token') || !selectedId || current().placements.some((p) => p.playerId === selectedId)) return;
     const point = pointAt(e.clientX, e.clientY);
     drop(selectedId, point, near(point, selectedId));
   });
@@ -248,7 +279,7 @@ function initialize() {
     const point = pointAt(r.left + (placement.x + delta[0] * step) / 100 * r.width, r.top + (placement.y + delta[1] * step) / 100 * r.height);
     drop(id, point, null);
   });
-  planSelect.addEventListener('change', () => { library.activeId = planSelect.value; selectedId = null; persist('已切换方案'); render(); });
+  planSelect.addEventListener('change', () => { markings.cancel(); cancelPlayerDrag(); library.activeId = planSelect.value; selectedId = null; persist('已切换方案'); render(); });
   formationSelect.addEventListener('change', () => {
     const formation = formationSelect.value;
     if (!Object.hasOwn(FORMATIONS, formation)) return;
@@ -271,7 +302,7 @@ function initialize() {
     change(() => {
       if (nameAction === 'rename') current().name = name;
       else {
-        const plan = makePlan(name, nameAction === 'save-as' ? current().placements : [], current().formation);
+        const plan = makePlan(name, nameAction === 'save-as' ? current().placements : [], current().formation, nameAction === 'save-as' ? { annotations: current().annotations, ball: current().ball } : undefined);
         library.plans.push(plan); library.activeId = plan.id; selectedId = null;
       }
     }, nameAction === 'rename' ? '方案已重命名' : '新方案已建立');
@@ -289,7 +320,7 @@ function initialize() {
     const file = e.target.files?.[0]; e.target.value = '';
     if (!file) return;
     try {
-      if (file.size > MAX_BACKUP_BYTES) throw new Error('备份文件不能超过 256 KB。');
+      if (file.size > MAX_BACKUP_BYTES) throw new Error('备份文件不能超过 1 MB。');
       const parsed = parseBackup(await file.text(), players);
       const next = appendPlans(library, parsed.library);
       change(() => { library = next; selectedId = null; }, `已追加 ${parsed.library.plans.length} 套方案${parsed.repairs ? `，修正 ${parsed.repairs} 项无效记录` : ''}；原有方案保留`);
@@ -332,6 +363,7 @@ function initialize() {
   document.addEventListener('click', (e) => {
     const action = e.target.closest('[data-action]')?.dataset.action;
     if (!action) return;
+    if (cancelPlayerDrag()) render();
     if (['new', 'save-as', 'rename'].includes(action)) { namePrompt(action); return; }
     if (action === 'close-name') nameDialog.close();
     if (action === 'close-image') imageDialog.close();
@@ -341,7 +373,7 @@ function initialize() {
     if (action === 'import') $('[data-import-file]').click();
     if (action === 'remove') removeSelected();
     if (action === 'cancel-selection') { selectedId = null; render(); }
-    if (action === 'reset') change(() => { current().formation = '3-2-2'; current().placements = defaultPlacements(players); selectedId = null; }, '当前方案已恢复默认阵型，可撤销');
+    if (action === 'reset') change(() => { current().placements = defaultPlacements(players, current().formation); selectedId = null; }, '当前方案已恢复默认阵型，可撤销');
     if (action === 'delete') {
       const name = current().name;
       change(() => {
@@ -350,7 +382,7 @@ function initialize() {
         library.activeId = library.plans[0].id; selectedId = null;
       }, `已删除「${name}」，可撤销`);
     }
-    if (action === 'undo' && history.length) { library = history.pop(); selectedId = null; persist('已撤销上一步'); render(); }
+    if (action === 'undo' && history.length) { markings.cancel(); cancelPlayerDrag(); library = history.pop(); selectedId = null; persist('已撤销上一步'); render(); }
   });
   load(); render();
 }

@@ -8,6 +8,13 @@ const DISPLAY = `"Barlow Condensed", "Arial Narrow", ${CJK}`;
 const cleanText = (value, fallback = "") =>
   typeof value === "string" ? value.replace(/\s+/gu, " ").trim() || fallback : fallback;
 const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
+const validPoint = (point) => point !== null && typeof point === "object" && !Array.isArray(point)
+  && Number.isFinite(point.x) && Number.isFinite(point.y)
+  && point.x >= 0 && point.x <= 100 && point.y >= 0 && point.y <= 100;
+const pitchPoint = (point, rect) => ({
+  x: rect.x + point.x / 100 * rect.width,
+  y: rect.y + point.y / 100 * rect.height,
+});
 
 async function loadFonts() {
   if (!document.fonts) return;
@@ -169,9 +176,92 @@ function drawPlayer(ctx, placement, player, rect) {
   ctx.restore();
 }
 
+function drawAnnotation(ctx, annotation, rect) {
+  const from = pitchPoint(annotation.from, rect);
+  const to = pitchPoint(annotation.to, rect);
+  // Work in output pixels, rather than independently scaling percentage axes:
+  // diagonal arrows retain their angle and shape on the 96 × 66 pitch.
+  const length = Math.hypot(to.x - from.x, to.y - from.y);
+  const dx = (to.x - from.x) / length;
+  const dy = (to.y - from.y) / length;
+  const headLength = Math.min(26, length * 0.45);
+  const headWidth = headLength * 0.48;
+  const base = { x: to.x - dx * headLength, y: to.y - dy * headLength };
+  const color = annotation.type === "run" ? "#f3ce63" : "#ffffff";
+  ctx.save();
+  ctx.lineCap = "round";
+  ctx.lineJoin = "round";
+  ctx.setLineDash(annotation.type === "pass" ? [22, 16] : []);
+  ctx.beginPath();
+  ctx.moveTo(from.x, from.y);
+  ctx.lineTo(base.x + dx * 5, base.y + dy * 5);
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 10;
+  ctx.stroke();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 6;
+  ctx.stroke();
+  ctx.setLineDash([]);
+  ctx.beginPath();
+  ctx.moveTo(to.x, to.y);
+  ctx.lineTo(base.x - dy * headWidth, base.y + dx * headWidth);
+  ctx.lineTo(base.x + dy * headWidth, base.y - dx * headWidth);
+  ctx.closePath();
+  ctx.fillStyle = color;
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 2;
+  ctx.fill();
+  ctx.stroke();
+  ctx.restore();
+}
+
+function pentagon(ctx, x, y, radius, rotation = -Math.PI / 2) {
+  ctx.beginPath();
+  for (let i = 0; i < 5; i += 1) {
+    const angle = rotation + i * Math.PI * 2 / 5;
+    const px = x + Math.cos(angle) * radius, py = y + Math.sin(angle) * radius;
+    if (i === 0) ctx.moveTo(px, py);
+    else ctx.lineTo(px, py);
+  }
+  ctx.closePath();
+}
+
+function drawBall(ctx, ball, rect) {
+  const { x, y } = pitchPoint(ball, rect);
+  const radius = 23;
+  ctx.save();
+  ctx.beginPath();
+  ctx.arc(x, y, radius, 0, Math.PI * 2);
+  ctx.fillStyle = "#ffffff";
+  ctx.shadowColor = "rgba(16,26,46,0.35)";
+  ctx.shadowBlur = 8;
+  ctx.shadowOffsetY = 3;
+  ctx.fill();
+  ctx.shadowColor = "transparent";
+  ctx.strokeStyle = INK;
+  ctx.lineWidth = 2;
+  ctx.stroke();
+  ctx.clip();
+  ctx.fillStyle = INK;
+  ctx.lineWidth = 1.5;
+  pentagon(ctx, x, y, 9);
+  ctx.fill();
+  for (let i = 0; i < 5; i += 1) {
+    const angle = -Math.PI / 2 + i * Math.PI * 2 / 5;
+    const dx = Math.cos(angle), dy = Math.sin(angle);
+    ctx.beginPath();
+    ctx.moveTo(x + dx * 9, y + dy * 9);
+    ctx.lineTo(x + dx * radius, y + dy * radius);
+    ctx.stroke();
+    pentagon(ctx, x + dx * radius * 0.92, y + dy * radius * 0.92, 8, angle + Math.PI);
+    ctx.fill();
+  }
+  ctx.restore();
+}
+
 /**
  * Render a portable PNG from normalized board data, without reading page DOM.
- * @param {{id: string, name: string, formation: string, placements: Array<{playerId: string, x: number, y: number}>, updatedAt?: string}} plan
+ * @param {{id: string, name: string, formation: string, placements: Array<{playerId: string, x: number, y: number}>, annotations?: Array<{id: string, type: 'run'|'pass', from: {x: number, y: number}, to: {x: number, y: number}}>, ball?: {x: number, y: number}|null, updatedAt?: string}} plan
  * @param {Array<{id: string, number: number|null, name: string}>} players
  * @returns {Promise<{blob: Blob, width: number, height: number}>}
  */
@@ -191,6 +281,24 @@ export async function createTacticsImage(plan, players) {
       throw new Error("阵容中的队员或站位数据有误，请调整后再导出。");
     }
     seen.add(placement.playerId);
+  }
+  const annotations = plan.annotations === undefined ? [] : plan.annotations;
+  const ball = plan.ball === undefined ? null : plan.ball;
+  if (!Array.isArray(annotations) || annotations.length > 40) {
+    throw new Error("战术标记数据有误，每套方案最多可导出 40 条标线。");
+  }
+  const annotationIds = new Set();
+  for (const annotation of annotations) {
+    if (!annotation || typeof annotation.id !== "string" || !annotation.id.trim() || annotation.id.length > 96
+      || annotationIds.has(annotation.id) || !["run", "pass"].includes(annotation.type)
+      || !validPoint(annotation.from) || !validPoint(annotation.to)
+      || (annotation.from.x === annotation.to.x && annotation.from.y === annotation.to.y)) {
+      throw new Error("战术标记中的线条数据有误，请调整后再导出。");
+    }
+    annotationIds.add(annotation.id);
+  }
+  if (ball !== null && !validPoint(ball)) {
+    throw new Error("足球位置数据有误，请调整后再导出。");
   }
   await loadFonts();
   const canvas = document.createElement("canvas");
@@ -235,7 +343,9 @@ export async function createTacticsImage(plan, players) {
   const formationLabel = /^\d(?:-\d){1,3}$/.test(formation) ? ` · ${formation}` : "";
   ctx.fillText(`八人制${formationLabel} · 场上 ${plan.placements.length} 人`, MARGIN, rect.y - 68);
   drawPitch(ctx, rect);
+  annotations.forEach((annotation) => drawAnnotation(ctx, annotation, rect));
   plan.placements.forEach((placement) => drawPlayer(ctx, placement, byId.get(placement.playerId), rect));
+  if (ball) drawBall(ctx, ball, rect);
 
   let blob;
   try {

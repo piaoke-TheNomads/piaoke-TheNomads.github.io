@@ -13,7 +13,8 @@
     "audit": "node tools/audit.mjs",
     "shoot": "node tools/shoot.mjs",
     "verify": "npm run check && npm test && npm run build",
-    "test:tactics-image": "node tools/test-tactics-image.mjs"
+    "test:tactics-image": "node tools/test-tactics-image.mjs",
+    "test:tactics-drawing": "node tools/check-tactics-drawing.mjs"
   },
   "dependencies": {
     "@astrojs/sitemap": "^3.7.4",

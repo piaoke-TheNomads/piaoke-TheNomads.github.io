@@ -1,7 +1,10 @@
+import { PRESET_PLAYER_IDS } from './tactics-presets.js';
+
 export const STORAGE_KEY = 'qmpk-tactics-v3';
 export const LEGACY_KEY = 'qmpk-tactics-v2';
 export const MAX_PLANS = 50;
-export const MAX_BACKUP_BYTES = 256 * 1024;
+export const MAX_BACKUP_BYTES = 1024 * 1024;
+export const MAX_ANNOTATIONS = 40;
 export const FORMATIONS = {
   '3-2-2': [
     { role: 'GK', x: 8, y: 50 },
@@ -13,6 +16,17 @@ export const FORMATIONS = {
     { role: 'F', preferred: ['ST'], x: 76, y: 32 },
     { role: 'F', preferred: ['ST'], x: 76, y: 68 },
   ],
+  '2-4-1': [
+    { role: 'GK', x: 8, y: 50 },
+    { role: 'D', preferred: ['LB', 'CB'], x: 27, y: 32 },
+    { role: 'D', preferred: ['CB', 'RB'], x: 27, y: 68 },
+    { role: 'M', preferred: ['LM', 'RM'], x: 52, y: 18 },
+    { role: 'M', preferred: ['AM', 'CM'], x: 52, y: 39 },
+    { role: 'M', preferred: ['DM', 'CM'], x: 52, y: 61 },
+    { role: 'M', preferred: ['RM', 'LM'], x: 52, y: 82 },
+    { role: 'F', preferred: ['ST'], x: 78, y: 50 },
+  ],
+  // Kept for already-saved plans and backups; not a current preset.
   '2-3-2': [
     { role: 'GK', x: 8, y: 50 },
     { role: 'D', preferred: ['CB', 'LB', 'FB'], x: 27, y: 32 },
@@ -29,7 +43,7 @@ export const copy = (value) => JSON.parse(JSON.stringify(value));
 export const makeId = () => globalThis.crypto?.randomUUID?.() || `plan-${Date.now()}-${Math.random().toString(36).slice(2)}`;
 export const clamp = (value, min, max) => Math.max(min, Math.min(max, value));
 const isRecord = (value) => value !== null && typeof value === 'object' && !Array.isArray(value);
-const validId = (id) => typeof id === 'string' && id.length > 0 && id.length <= 96;
+const validId = (id) => typeof id === 'string' && id.trim().length > 0 && id.length <= 96;
 export const cleanName = (name) => typeof name === 'string' ? name.trim().replace(/[\u0000-\u001f\u007f]/g, '').slice(0, 60) : '';
 
 function suitability(player, slot) {
@@ -44,12 +58,18 @@ function suitability(player, slot) {
   return 10;
 }
 
-/** Global assignment reserves versatile players for roles where they are needed. */
+/** Keep the agreed preset, then globally assign available players to any missing slots. */
 export function defaultPlacements(players, formation = '3-2-2') {
-  const slots = FORMATIONS[formation] || FORMATIONS['3-2-2'];
-  let states = new Map([[0, { score: 0, picks: [] }]]);
+  const key = Object.hasOwn(FORMATIONS, formation) ? formation : '3-2-2';
+  const slots = FORMATIONS[key];
+  const available = new Set(players.map((p) => p.id));
+  const preset = (PRESET_PLAYER_IDS[key] || []).flatMap((playerId, index) => available.has(playerId) ? [{ index, playerId }] : []);
+  const used = new Set(preset.map((p) => p.playerId));
+  const presetMask = preset.reduce((mask, p) => mask | (1 << p.index), 0);
+  let states = new Map([[presetMask, { score: 0, picks: preset }]]);
   const sorted = [...players].sort((a, b) => (a.number ?? 999) - (b.number ?? 999) || a.id.localeCompare(b.id));
   for (const player of sorted) {
+    if (used.has(player.id)) continue;
     const next = new Map(states);
     for (const [mask, state] of states) {
       slots.forEach((slot, index) => {
@@ -67,8 +87,13 @@ export function defaultPlacements(players, formation = '3-2-2') {
   return best.picks.sort((a, b) => a.index - b.index).map(({ index, playerId }) => ({ playerId, x: slots[index].x, y: slots[index].y }));
 }
 
-export function makePlan(name, placements = [], formation = '3-2-2') {
-  return { id: makeId(), name: cleanName(name) || '新方案', formation, placements: copy(placements), updatedAt: new Date().toISOString() };
+export function makePlan(name, placements = [], formation = '3-2-2', details = {}) {
+  return {
+    id: makeId(), name: cleanName(name) || '新方案', formation, placements: copy(placements),
+    annotations: sanitizeAnnotations(details?.annotations).annotations,
+    ball: sanitizeBall(details?.ball).ball,
+    updatedAt: new Date().toISOString(),
+  };
 }
 export function makeLibrary(players) {
   const plan = makePlan('首发阵容', defaultPlacements(players));
@@ -97,6 +122,11 @@ export function applyDrop(placements, playerId, point, targetId = null) {
 
 export function applyFormation(placements, formation, players = []) {
   const slots = FORMATIONS[formation] || FORMATIONS['3-2-2'];
+  const preset = PRESET_PLAYER_IDS[formation];
+  const present = new Set(placements.map((p) => p.playerId));
+  if (placements.length === 8 && preset?.every((id) => present.has(id))) {
+    return preset.map((playerId, index) => ({ playerId, x: slots[index].x, y: slots[index].y }));
+  }
   const roster = new Map(players.map((p) => [p.id, p]));
   const ordered = [...placements].sort((a, b) => a.x - b.x || a.y - b.y);
   let goalkeeper = ordered.find((p) => roster.get(p.playerId)?.position === 'GK')
@@ -124,6 +154,42 @@ export function sanitizePlacements(raw, players) {
   return { placements, repairs };
 }
 
+function normalizedPoint(point, min, max) {
+  if (!isRecord(point) || !Number.isFinite(point.x) || !Number.isFinite(point.y)) return null;
+  return { x: clamp(point.x, min, max), y: clamp(point.y, min, max) };
+}
+
+/** Small accidental gestures do not leave a mark. Coordinates are percentages. */
+export function makeAnnotation(type, from, to) {
+  if (type !== 'run' && type !== 'pass') return null;
+  const start = normalizedPoint(from, 2, 98), end = normalizedPoint(to, 2, 98);
+  if (!start || !end || Math.hypot(end.x - start.x, end.y - start.y) < 2) return null;
+  return { id: makeId(), type, from: start, to: end };
+}
+
+export function sanitizeAnnotations(raw) {
+  if (raw === undefined) return { annotations: [], repairs: 0 };
+  if (!Array.isArray(raw)) return { annotations: [], repairs: 1 };
+  const annotations = [], seen = new Set();
+  let repairs = 0;
+  for (const annotation of raw) {
+    if (!isRecord(annotation) || !validId(annotation.id) || seen.has(annotation.id) || annotations.length >= MAX_ANNOTATIONS) { repairs++; continue; }
+    const clean = makeAnnotation(annotation.type, annotation.from, annotation.to);
+    if (!clean) { repairs++; continue; }
+    if (clean.from.x !== annotation.from.x || clean.from.y !== annotation.from.y || clean.to.x !== annotation.to.x || clean.to.y !== annotation.to.y) repairs++;
+    annotations.push({ ...clean, id: annotation.id });
+    seen.add(annotation.id);
+  }
+  return { annotations, repairs };
+}
+
+export function sanitizeBall(raw) {
+  if (raw === undefined || raw === null) return { ball: null, repairs: 0 };
+  const ball = normalizedPoint(raw, 3, 97);
+  if (!ball) return { ball: null, repairs: 1 };
+  return { ball, repairs: ball.x !== raw.x || ball.y !== raw.y ? 1 : 0 };
+}
+
 export function sanitizeLibrary(raw, players) {
   if (!isRecord(raw) || raw.version !== 3 || !Array.isArray(raw.plans) || raw.plans.length === 0) throw new Error('备份格式不正确，请选择战术板导出的 JSON 文件。');
   if (raw.plans.length > MAX_PLANS) throw new Error(`每份备份最多包含 ${MAX_PLANS} 套方案。`);
@@ -135,12 +201,14 @@ export function sanitizeLibrary(raw, players) {
     if (!validId(id) || ids.has(id)) { id = makeId(); repairs++; }
     ids.add(id);
     const checked = sanitizePlacements(p.placements, players);
-    repairs += checked.repairs;
+    const markings = sanitizeAnnotations(p.annotations);
+    const football = sanitizeBall(p.ball);
+    repairs += checked.repairs + markings.repairs + football.repairs;
     const name = cleanName(p.name);
     const formation = Object.hasOwn(FORMATIONS, p.formation) ? p.formation : '3-2-2';
     if (name !== p.name || formation !== p.formation) repairs++;
     const updatedAt = typeof p.updatedAt === 'string' && p.updatedAt.length <= 40 && Number.isFinite(Date.parse(p.updatedAt)) ? new Date(p.updatedAt).toISOString() : new Date().toISOString();
-    return { id, name, formation, placements: checked.placements, updatedAt };
+    return { id, name, formation, placements: checked.placements, annotations: markings.annotations, ball: football.ball, updatedAt };
   });
   const activeId = plans.some((p) => p.id === raw.activeId) ? raw.activeId : plans[0].id;
   if (activeId !== raw.activeId) repairs++;
@@ -148,7 +216,7 @@ export function sanitizeLibrary(raw, players) {
 }
 
 export function parseBackup(text, players) {
-  if (typeof text !== 'string' || new TextEncoder().encode(text).length > MAX_BACKUP_BYTES) throw new Error('备份文件不能超过 256 KB。');
+  if (typeof text !== 'string' || new TextEncoder().encode(text).length > MAX_BACKUP_BYTES) throw new Error('备份文件不能超过 1 MiB。');
   let raw;
   try { raw = JSON.parse(text); } catch { throw new Error('无法读取这个文件，请选择有效的 JSON 备份。'); }
   return sanitizeLibrary(raw, players);
@@ -185,7 +253,7 @@ export function appendPlans(library, imported) {
       name = `${base.slice(0, 60 - ending.length)}${ending}`;
     }
     names.add(name);
-    return { ...copy(p), id: makeId(), name };
+    return { ...copy(p), id: makeId(), name, annotations: sanitizeAnnotations(p.annotations).annotations, ball: sanitizeBall(p.ball).ball };
   });
   return { version: 3, activeId: plans[0].id, plans: [...copy(library.plans), ...plans] };
 }

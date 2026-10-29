@@ -22,11 +22,20 @@ const players = activeRoster.map((p) => ({ id: p.id, number: p.number, name: p.n
         </div>
       </div>
       <div class="tactics-controls">
-        <label class="tactics-select-label">阵型<select data-formation aria-label="阵型模板"><option value="3-2-2">3–2–2</option><option value="2-3-2">2–3–2</option></select></label>
+        <label class="tactics-select-label">阵型<select data-formation aria-label="阵型模板"><option value="3-2-2">3–2–2</option><option value="2-4-1">2–4–1</option></select></label>
         <button type="button" data-action="reset">恢复默认阵型</button>
         <button type="button" data-action="undo" disabled>撤销</button>
         <span class="tactics-count" data-count>场上 0 / 8</span>
       </div>
+      <div class="tactics-drawing-tools" role="group" aria-label="战术工具">
+        <button type="button" data-tool="move" aria-pressed="true">移动</button>
+        <button type="button" data-tool="run" aria-pressed="false"><span class="tactics-line-key tactics-line-key--run" aria-hidden="true"></span>跑位箭头</button>
+        <button type="button" data-tool="pass" aria-pressed="false"><span class="tactics-line-key tactics-line-key--pass" aria-hidden="true"></span>传球线</button>
+        <button type="button" data-tool="ball" aria-pressed="false">足球</button>
+        <button type="button" data-tool="erase" aria-pressed="false">橡皮擦</button>
+        <button type="button" data-action="clear-markings" disabled>清空标记</button>
+      </div>
+      <p class="tactics-tool-help" data-tool-help>拖动队员或足球，调整位置。</p>
       <div class="tactics-board-wrap">
         <div class="tactics-board" data-board role="group" aria-label="八人制球场" aria-describedby="tactics-help" tabindex="0">
           <div class="tactics-field" aria-hidden="true">
@@ -58,7 +67,9 @@ const players = activeRoster.map((p) => ({ id: p.id, number: p.number, name: p.n
             <span class="tactics-goal tactics-goal--right"></span>
           </div>
 
+          <svg class="tactics-markings-layer" data-markings viewBox="0 0 960 660" preserveAspectRatio="none" aria-label="战术标线"></svg>
           <div class="tactics-onfield" data-onfield></div>
+          <div class="tactics-ball-layer" data-ball-layer></div>
         </div>
         <div class="tactics-selection">
           <span data-selection>选择队员后可安排上场或下场</span>
@@ -78,7 +89,7 @@ const players = activeRoster.map((p) => ({ id: p.id, number: p.number, name: p.n
         <input type="file" accept=".json,application/json" data-import-file hidden />
       </div>
       <p class="tactics-footnote">方案仅保存在本机的当前浏览器。导出备份后，可在其他设备导入并继续编辑。</p>
-      <details class="tactics-help" id="tactics-help"><summary>操作说明</summary><p>拖动队员到球场，覆盖另一名队员可换人或换位。也可先选择替补，再点击场上位置。选中场上队员后，方向键微调站位，Delete 键下场；Shift + 方向键加快移动。切换阵型保留当前队员，恢复默认阵型会重新选人。</p></details>
+      <details class="tactics-help" id="tactics-help"><summary>操作说明</summary><p>拖动队员到球场，覆盖另一名队员可换人或换位。也可先选择替补，再点击场上位置。选中场上队员后，方向键微调站位，Delete 键下场；Shift + 方向键加快移动。切换阵型保留当前队员，恢复默认阵型会按所选阵型重新选人。跑位箭头和传球线可拖动画出，也可依次点击起点和终点；按 Esc 取消。使用橡皮擦删除线条或足球，清空标记不影响队员站位。标记会随方案保存，并包含在导出的图片和备份中。</p></details>
     </div>
   </section>
   <dialog class="tactics-dialog" data-name-dialog aria-labelledby="plan-dialog-title">

@@ -52,9 +52,10 @@ try {
   const initial = await positions(page);
   assert.equal(Object.keys(initial).length, 8);
   assert.equal(new Set(Object.values(initial).map((p) => p.id)).size, 8);
-  assert.equal(initial[87].x, 8, 'registered primary goalkeeper starts in goal');
-  assert.equal(initial[87].y, 50);
-  pass('默认八人阵容，真实门将优先且无人重复');
+  assert.deepEqual(Object.keys(initial).map(Number).sort((a, b) => a - b), [6, 9, 10, 11, 22, 25, 60, 88]);
+  assert.equal(initial[6].x, 8, 'the selected default goalkeeper starts in goal');
+  assert.equal(initial[6].y, 50);
+  pass('默认322八人阵容：6号门将、指定后中前场且无人重复');
 
   const benchNumber = await page.locator('.tactics-chip:not(.is-on)').first().getAttribute('data-number');
   await drag(page, chip(page, benchNumber), 90, 15);
@@ -62,7 +63,7 @@ try {
   assert.match(await page.locator('[data-status]').innerText(), /8 人/);
   pass('满员时不能增加第九人');
 
-  const replaceNumber = Object.keys(initial).find((n) => n !== '87');
+  const replaceNumber = Object.keys(initial).find((n) => n !== '6');
   const replaceSpot = initial[replaceNumber];
   await drag(page, chip(page, benchNumber), replaceSpot.x, replaceSpot.y);
   let now = await positions(page);
@@ -70,7 +71,7 @@ try {
   assert.equal(now[replaceNumber], undefined);
   assert.equal(now[benchNumber].x, replaceSpot.x);
   assert.equal(now[benchNumber].y, replaceSpot.y);
-  const other = Object.keys(now).find((n) => n !== benchNumber && n !== '87');
+  const other = Object.keys(now).find((n) => n !== benchNumber && n !== '6');
   const otherSpot = now[other];
   await drag(page, token(page, benchNumber), otherSpot.x, otherSpot.y);
   now = await positions(page);
@@ -102,7 +103,7 @@ try {
   assert.notEqual(copiedId, originalId);
   assert.deepEqual(current(await state(page)).placements, current(edited).placements);
   await namePlan(page, 'rename', '客场方案');
-  await page.locator('[data-formation]').selectOption('2-3-2');
+  await page.locator('[data-formation]').selectOption('2-4-1');
   assert.deepEqual(current(await state(page)).placements.map((p) => p.playerId).sort(), current(edited).placements.map((p) => p.playerId).sort());
   await page.locator('[data-plan-select]').selectOption(originalId);
   assert.deepEqual(current(await state(page)).placements, current(edited).placements);
@@ -114,6 +115,7 @@ try {
   assert.equal(current(await state(page)).name, '客场方案');
   await namePlan(page, 'new', '空白方案');
   assert.equal(await page.locator('.tactics-token').count(), 0);
+  await page.locator('[data-formation]').selectOption('3-2-2');
   await action(page, 'reset');
   assert.deepEqual(await positions(page), initial);
   await action(page, 'undo');
@@ -135,7 +137,7 @@ try {
   await importFile(page, '{broken');
   assert.deepEqual(await state(page), imported);
   assert.match(await page.locator('[data-status]').innerText(), /有效的 JSON/);
-  await importFile(page, ' '.repeat(256 * 1024 + 1));
+  await importFile(page, ' '.repeat(1024 * 1024 + 1));
   assert.deepEqual(await state(page), imported);
   pass('备份往返、追加不覆盖、同名处理及无效文件隔离');
 
@@ -182,14 +184,14 @@ try {
   const mobile = await open(mobileContext);
   assert.ok(await mobile.evaluate(() => document.documentElement.scrollWidth <= innerWidth), 'no mobile page overflow');
   await mobile.locator('[data-board]').scrollIntoViewIfNeeded();
-  const mtoken = token(mobile, 87), box = await mtoken.boundingBox(), mboard = await mobile.locator('[data-board]').boundingBox();
+  const mtoken = token(mobile, 6), box = await mtoken.boundingBox(), mboard = await mobile.locator('[data-board]').boundingBox();
   const session = await mobileContext.newCDPSession(mobile);
   const sx = box.x + box.width / 2, sy = box.y + box.height / 2;
   const ex = mboard.x + mboard.width * .15, ey = mboard.y + mboard.height * .6;
   await session.send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [{ x: sx, y: sy }] });
   for (let step = 1; step <= 8; step++) await session.send('Input.dispatchTouchEvent', { type: 'touchMove', touchPoints: [{ x: sx + (ex - sx) * step / 8, y: sy + (ey - sy) * step / 8 }] });
   await session.send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
-  const moved = (await positions(mobile))[87];
+  const moved = (await positions(mobile))[6];
   assert.ok(Math.abs(moved.x - 15) < 1 && Math.abs(moved.y - 60) < 1, 'touch drag updates placement');
   await mobile.waitForTimeout(150);
   await mobile.screenshot({ path: join(output, 'tactics-mobile.png'), fullPage: true });
