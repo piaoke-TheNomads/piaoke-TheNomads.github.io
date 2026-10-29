@@ -1,6 +1,8 @@
 ---
 import Base from "../layouts/Base.astro";
 import { site, staffList, stats, championSeasons } from "../lib/data";
+const staffNamed = staffList.filter((s) => s.name && s.name.trim());
+
 ---
 
 <Base
@@ -48,27 +50,26 @@ import { site, staffList, stats, championSeasons } from "../lib/data";
       </div>
     </div>
 
-    <div class="section section--tight">
-      <div class="section__head">
-        <div>
-          <p class="label">Staff · 队内职衔</p>
-          <h2 style="margin-top:10px">谁在管这些事</h2>
-        </div>
-      </div>
-
-      <div class="cards">
-        {
-          staffList.map((s) => (
-            <div class="card">
-              <p class="label">Role</p>
-              <p class="card__t" style="font-size:1.3rem">{s.role}</p>
-              {s.name ? <p class="card__d">{s.name}</p> : null}
+    {
+      staffNamed.length > 0 && (
+        <div class="section section--tight">
+          <div class="section__head">
+            <div>
+              <p class="label">Staff · 队内职衔</p>
+              <h2 style="margin-top:10px">谁在管这些事</h2>
             </div>
-          ))
-        }
-      </div>
-
-    </div>
+          </div>
+          <div class="cards">
+            {staffNamed.map((s) => (
+              <div class="card">
+                <p class="card__t" style="font-size:1.3rem">{s.role}</p>
+                <p class="card__d">{s.name}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      )
+    }
 
     <div class="section section--tight">
       <div class="section__head">

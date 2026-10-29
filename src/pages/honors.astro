@@ -2,11 +2,6 @@
 import Base from "../layouts/Base.astro";
 import { honorsList, championSeasons, stats } from "../lib/data";
 
-const kindLabel = {
-  champion: "champion",
-  third: "third place",
-  semifinal: "semi-final",
-};
 ---
 
 <Base
@@ -18,9 +13,6 @@ const kindLabel = {
     <div class="page-head">
       <p class="label page-head__kicker">Honors · 荣誉</p>
       <h1>{honorsList.length} 项荣誉</h1>
-      <p class="lede page-head__dek">
-        {stats.seasons} 个赛季，{stats.stars} 个冠军赛季。队徽上的星星按冠军赛季计。
-      </p>
     </div>
 
     <div class="section section--tight">
@@ -41,7 +33,6 @@ const kindLabel = {
             <div class={`honor honor--${h.kind}`}>
               <span class="honor__season">{h.season}</span>
               <span class="honor__trophy">{h.trophy}</span>
-              <span class="honor__kind">{kindLabel[h.kind] ?? h.kind}</span>
             </div>
           ))
         }

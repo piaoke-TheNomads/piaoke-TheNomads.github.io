@@ -45,25 +45,6 @@ const latest = seasonsList[0];
             </p>
           </div>
         </div>
-
-        <div class="stats">
-          <div class="stats__cell">
-            <span class="num stats__num">{stats.active}</span>
-            <p class="label stats__key">现役球员</p>
-          </div>
-          <div class="stats__cell">
-            <span class="num stats__num">{stats.seasons}</span>
-            <p class="label stats__key">参加赛季</p>
-          </div>
-          <div class="stats__cell">
-            <span class="num stats__num">{stats.stars}</span>
-            <p class="label stats__key">冠军赛季</p>
-          </div>
-          <div class="stats__cell">
-            <span class="num stats__num">{stats.est}</span>
-            <p class="label stats__key">建队年份</p>
-          </div>
-        </div>
       </div>
     </div>
   </section>
@@ -108,13 +89,6 @@ const latest = seasonsList[0];
             <div class={`honor honor--${h.kind}`}>
               <span class="honor__season">{h.season}</span>
               <span class="honor__trophy">{h.trophy}</span>
-              <span class="honor__kind">
-                {h.kind === "champion"
-                  ? "champion"
-                  : h.kind === "third"
-                    ? "third place"
-                    : "semi-final"}
-              </span>
             </div>
           ))
         }
@@ -139,7 +113,6 @@ const latest = seasonsList[0];
             <th>赛季</th>
             <th class="num">场次</th>
             <th class="num">名次</th>
-            <th>结果</th>
           </tr>
         </thead>
         <tbody>
@@ -149,7 +122,6 @@ const latest = seasonsList[0];
                 <td><a class="table__link" href={`/seasons/${s.id}`}>{s.label}</a></td>
                 <td class="num">{s.played ?? "—"}</td>
                 <td class="num">{s.rank ?? "—"}</td>
-                <td>{s.result}</td>
               </tr>
             ))
           }
@@ -178,7 +150,7 @@ const latest = seasonsList[0];
       <div class="section__head">
         <div>
           <p class="label">Squad · 名单</p>
-          <h2 style="margin-top:10px">{stats.active} 名现役</h2>
+          <h2 style="margin-top:10px">球员名单</h2>
         </div>
         <a class="section__more" href="/squad">全部名单 →</a>
       </div>

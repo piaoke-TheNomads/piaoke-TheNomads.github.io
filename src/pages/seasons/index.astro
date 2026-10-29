@@ -5,7 +5,7 @@ import { seasonsList, stats } from "../../lib/data";
 
 <Base
   title="赛季"
-  description={`球门飘客参加过的 ${stats.seasons} 个赛季的场次、名次与结果。`}
+  description={`球门飘客参加过的 ${stats.seasons} 个赛季的场次与最终名次。`}
   active="seasons"
 >
   <section class="wrap">
@@ -13,7 +13,7 @@ import { seasonsList, stats } from "../../lib/data";
       <p class="label page-head__kicker">Seasons · 赛季</p>
       <h1>{stats.seasons} 个赛季</h1>
       <p class="lede page-head__dek">
-        页面记录各赛季的参赛场次、最终名次与赛事结果。
+        页面记录各赛季的参赛场次与最终名次。
       </p>
     </div>
 
@@ -24,7 +24,6 @@ import { seasonsList, stats } from "../../lib/data";
             <th>赛季</th>
             <th class="num">场次</th>
             <th class="num">名次</th>
-            <th>结果</th>
           </tr>
         </thead>
         <tbody>
@@ -38,7 +37,6 @@ import { seasonsList, stats } from "../../lib/data";
                 </td>
                 <td class="num">{s.played ?? "—"}</td>
                 <td class="num">{s.rank ?? "—"}</td>
-                <td>{s.result}</td>
               </tr>
             ))
           }

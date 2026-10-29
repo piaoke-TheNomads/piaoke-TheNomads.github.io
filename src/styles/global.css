@@ -457,7 +457,7 @@ p {
 
 .honor {
   display: grid;
-  grid-template-columns: 110px 1fr auto;
+  grid-template-columns: 110px 1fr;
   gap: 18px;
   align-items: baseline;
   padding: 18px 0;
