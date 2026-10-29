@@ -1505,3 +1505,11 @@ p {
 .player-head__num.is-retired {
   color: var(--rule-strong);
 }
+
+.player__joined {
+  font-family: var(--mono);
+  font-size: 0.8rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin-bottom: 8px;
+}

@@ -62,30 +62,11 @@ const isRetired = player.status === "retired";
       </div>
 
       <div style="grid-column: 7 / span 6" class="stack">
-        <table class="table table--kv">
-          <tbody>
-            <tr>
-              <th scope="row">号码</th>
-              <td class="num">{player.number}</td>
-            </tr>
-            {
-              status ? (
-                <tr>
-                  <th scope="row">状态</th>
-                  <td>{status}</td>
-                </tr>
-              ) : null
-            }
-            <tr>
-              <th scope="row">位置</th>
-              <td>{pos ?? "—"}</td>
-            </tr>
-            <tr>
-              <th scope="row">加入年份</th>
-              <td>{player.joined ?? "—"}</td>
-            </tr>
-          </tbody>
-        </table>
+        {
+          player.joined ? (
+            <p class="player__joined">加入球队 {player.joined} 年</p>
+          ) : null
+        }
 
         <div class="pager">
           {
