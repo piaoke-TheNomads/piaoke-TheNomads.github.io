@@ -1,0 +1,121 @@
+---
+import Base from "../layouts/Base.astro";
+import { site, staffList, stats, championSeasons } from "../lib/data";
+---
+
+<Base
+  title="关于"
+  description={`${site.name}：成立于 ${site.est} 年的${site.school}足球队。`}
+  active="about"
+>
+  <section class="wrap">
+    <div class="page-head">
+      <p class="label page-head__kicker">About · 关于</p>
+      <h1>{site.name}<span class="h1-sub">{site.nameEn}</span></h1>
+      <p class="lede page-head__dek">{site.slogan}</p>
+    </div>
+
+    <div class="section section--tight grid">
+      <div style="grid-column: 1 / span 6" class="prose">
+        <p class="label">球队</p>
+        <p style="margin-top:14px">
+          {site.name}
+          2022
+          年成立于{site.school}，参加{site.league}。建队首季拿下常规赛与季后赛双冠，之后连续三个赛季留在前四，
+          2025-26 赛季重新拿回冠军。
+        </p>
+        <p>
+          队徽上是 {stats.stars} 颗星，对应
+          {championSeasons.join(" 与 ")} 两个冠军赛季。
+        </p>
+        <p>
+          球队没有赞助、没有俱乐部编制，报名、订球衣、约场地都由队里的人自己处理。这个网站也一样。
+        </p>
+      </div>
+
+      <div style="grid-column: 8 / span 5">
+        <p class="label">Facts</p>
+        <table class="table table--kv" style="margin-top:14px">
+          <tbody>
+            <tr><th scope="row">建队</th><td class="num">{site.est}</td></tr>
+            <tr><th scope="row">城市</th><td>{site.city}</td></tr>
+            <tr><th scope="row">学校</th><td>{site.school}</td></tr>
+            <tr><th scope="row">赛事</th><td>{site.league}</td></tr>
+            <tr><th scope="row">球员</th><td class="num">{stats.players}</td></tr>
+            <tr><th scope="row">冠军赛季</th><td class="num">{stats.stars}</td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="section section--tight">
+      <div class="section__head">
+        <div>
+          <p class="label">Staff · 队内职衔</p>
+          <h2 style="margin-top:10px">谁在管这些事</h2>
+        </div>
+      </div>
+
+      <div class="cards">
+        {
+          staffList.map((s) => (
+            <div class="card">
+              <p class="label">Role</p>
+              <p class="card__t" style="font-size:1.3rem">{s.role}</p>
+              <p class="card__d">
+                {s.name ? s.name : <span class="pending">姓名待补</span>}
+              </p>
+            </div>
+          ))
+        }
+      </div>
+
+      <p class="note" style="margin-top:32px">
+        职衔来自球队 PPT 第 3 页的原话，没有改写。名字还没给，先留位。
+      </p>
+    </div>
+
+    <div class="section section--tight">
+      <div class="section__head">
+        <div>
+          <p class="label">Timeline · 时间线</p>
+          <h2 style="margin-top:10px">四个赛季</h2>
+        </div>
+        <a class="section__more" href="/seasons">赛季详情 →</a>
+      </div>
+
+      <ol class="timeline">
+        <li class="timeline__item">
+          <span class="num timeline__year">2022</span>
+          <div>
+            <p class="card__t">建队</p>
+            <p class="card__d">
+              2022-23 赛季首战，常规赛冠军、季后赛冠军。
+            </p>
+          </div>
+        </li>
+        <li class="timeline__item">
+          <span class="num timeline__year">2023</span>
+          <div>
+            <p class="card__t">四强</p>
+            <p class="card__d">2023-24 赛季，止步四强。</p>
+          </div>
+        </li>
+        <li class="timeline__item">
+          <span class="num timeline__year">2024</span>
+          <div>
+            <p class="card__t">季军</p>
+            <p class="card__d">2024-25 赛季，季军。</p>
+          </div>
+        </li>
+        <li class="timeline__item">
+          <span class="num timeline__year">2025</span>
+          <div>
+            <p class="card__t">冠军</p>
+            <p class="card__d">2025-26 赛季，冠军，队徽上第二颗星。</p>
+          </div>
+        </li>
+      </ol>
+    </div>
+  </section>
+</Base>

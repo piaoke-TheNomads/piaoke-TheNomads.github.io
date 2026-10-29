@@ -1,0 +1,45 @@
+{
+  "note": "场次与名次来自赛事积分榜截图。胜负与进失球需要逐场比分才能填，留空时页面会自动隐去，不显示 0。",
+  "seasons": [
+    {
+      "id": "2025-26",
+      "label": "2025-26",
+      "played": 14,
+      "rank": 1,
+      "teams": 8,
+      "result": "冠军",
+      "record": null,
+      "note": "八队双循环，领先第二名 8 分。"
+    },
+    {
+      "id": "2024-25",
+      "label": "2024-25",
+      "played": 8,
+      "rank": 3,
+      "teams": 9,
+      "result": "季军",
+      "record": null,
+      "note": "九队单循环，与第二名同分、净胜球落后。"
+    },
+    {
+      "id": "2023-24",
+      "label": "2023-24",
+      "played": 9,
+      "rank": 4,
+      "teams": 10,
+      "result": "四强",
+      "record": null,
+      "note": "十队单循环，止步四强。"
+    },
+    {
+      "id": "2022-23",
+      "label": "2022-23",
+      "played": null,
+      "rank": null,
+      "teams": null,
+      "result": "常规赛冠军 · 季后赛冠军",
+      "record": null,
+      "note": "建队首季，常规赛与季后赛双冠。"
+    }
+  ]
+}

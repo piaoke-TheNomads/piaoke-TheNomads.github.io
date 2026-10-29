@@ -1,0 +1,30 @@
+{
+  "updated": "2026-10-28",
+  "source": "《报名&新球衣》表格截图（工作表1）",
+  "note": "学号与尺码属于内部信息，不入库、不上站。球衣只显示真名。position/photo/joined 待补。",
+  "players": [
+    { "number": 10, "name": "李品卓", "position": null, "photo": null, "joined": null },
+    { "number": 87, "name": "王明宇", "position": null, "photo": null, "joined": null },
+    { "number": 20, "name": "李可萱", "position": null, "photo": null, "joined": null },
+    { "number": 1,  "name": "刘若尘", "position": null, "photo": null, "joined": null },
+    { "number": 9,  "name": "龚谦益", "position": null, "photo": null, "joined": null },
+    { "number": 22, "name": "段卓", "position": null, "photo": null, "joined": null },
+    { "number": 7,  "name": "樊彦博", "position": null, "photo": null, "joined": null },
+    { "number": 3,  "name": "姚立方", "position": null, "photo": null, "joined": null },
+    { "number": 77, "name": "董昊宇", "position": null, "photo": null, "joined": null },
+    { "number": 32, "name": "聂晓滨", "position": null, "photo": null, "joined": null },
+    { "number": 6,  "name": "李嘉轩", "position": null, "photo": null, "joined": null },
+    { "number": 60, "name": "刘麟", "position": null, "photo": null, "joined": null },
+    { "number": 88, "name": "汪铭锋", "position": null, "photo": null, "joined": null },
+    { "number": 11, "name": "黄孔昌昊", "position": null, "photo": null, "joined": null },
+    { "number": 38, "name": "张天龙", "position": null, "photo": null, "joined": null },
+    { "number": 25, "name": "张建华", "position": null, "photo": null, "joined": null },
+    { "number": 99, "name": "刘峻上", "position": null, "photo": null, "joined": null },
+    { "number": 37, "name": "孙新瑞", "position": null, "photo": null, "joined": null },
+    { "number": 15, "name": "沈锋", "position": null, "photo": null, "joined": null },
+    { "number": 30, "name": "周道远", "position": null, "photo": null, "joined": null },
+    { "number": 12, "name": "王弘毅", "position": null, "photo": null, "joined": null },
+    { "number": 31, "name": "赵钧正", "position": null, "photo": null, "joined": null },
+    { "number": 5,  "name": "李玮煜", "position": null, "photo": null, "joined": null }
+  ]
+}

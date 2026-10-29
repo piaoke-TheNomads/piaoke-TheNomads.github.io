@@ -1,0 +1,22 @@
+{
+  "name": "qmpk-site",
+  "type": "module",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "node tools/check-data.mjs && node tools/check-players.mjs",
+    "audit": "node tools/audit.mjs",
+    "shoot": "node tools/shoot.mjs",
+    "verify": "npm run check && npm run build"
+  },
+  "dependencies": {
+    "@astrojs/sitemap": "^3.7.4",
+    "astro": "^5.14.1"
+  },
+  "devDependencies": {
+    "playwright": "^1.64.1"
+  }
+}

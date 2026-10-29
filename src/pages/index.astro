@@ -1,0 +1,254 @@
+---
+import Base from "../layouts/Base.astro";
+import {
+  site,
+  roster,
+  honorsList,
+  seasonsList,
+  stats,
+  positionOf,
+} from "../lib/data";
+
+const preview = roster.slice(0, 12);
+const rest = roster.length - preview.length;
+const latest = seasonsList[0];
+---
+
+<Base active="home" image="/photos/image1-1600.webp">
+  <section class="hero">
+    <div class="hero__shot">
+      <img
+        src="/photos/image1-1600.webp"
+        alt="球门飘客全队在球场边的合影"
+        width="1600"
+        height="955"
+        fetchpriority="high"
+      />
+    </div>
+
+    <div class="wrap">
+      <div class="hero__plate">
+        <div class="hero__grid">
+          <div>
+            <p class="label label--ink">
+              EST. {site.est} · {site.city} · {site.league}
+            </p>
+            <h1 class="hero__title">{site.name}</h1>
+            <span class="hero__en">{site.nameEn}</span>
+          </div>
+          <div>
+            <p class="lede">
+              上海科技大学的足球队。{site.est} 年建队，现在还在踢。
+            </p>
+            <div class="hero__meta">
+              <span>{stats.players} 名球员</span>
+              <span>{stats.seasons} 个赛季</span>
+              <span>{stats.stars} 个冠军赛季</span>
+            </div>
+          </div>
+        </div>
+
+        <div class="stats">
+          <div class="stats__cell">
+            <span class="num stats__num">{stats.players}</span>
+            <p class="label stats__key">在册球员</p>
+          </div>
+          <div class="stats__cell">
+            <span class="num stats__num">{stats.seasons}</span>
+            <p class="label stats__key">参加赛季</p>
+          </div>
+          <div class="stats__cell">
+            <span class="num stats__num">{stats.stars}</span>
+            <p class="label stats__key">冠军赛季</p>
+          </div>
+          <div class="stats__cell">
+            <span class="num stats__num">{stats.est}</span>
+            <p class="label stats__key">建队年份</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="wrap">
+      <div class="grid">
+        <div style="grid-column: 1 / span 5">
+          <p class="label">About · 关于球队</p>
+          <h2 style="margin-top:14px">把每个赛季都踢完</h2>
+        </div>
+        <div style="grid-column: 7 / span 6" class="prose">
+          <p>
+            {site.name} 2022
+            年成立于{site.school}。第一年就拿下常规赛与季后赛双冠，之后连续三个赛季留在前四，
+            2025-26 赛季重新拿回冠军。
+          </p>
+          <p>
+            队徽上有{stats.stars}颗星，对应
+            <em>2022-23</em> 与 <em>2025-26</em>
+            两个冠军赛季。剩下的星星，留给还没踢的比赛。
+          </p>
+          <p style="margin-top:22px">
+            <a class="btn" href="/about">关于球队 →</a>
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="section__head">
+        <div>
+          <p class="label">Honors · 荣誉</p>
+          <h2 style="margin-top:10px">球队荣誉</h2>
+        </div>
+        <a class="section__more" href="/honors">全部荣誉 →</a>
+      </div>
+
+      <div class="honor-list">
+        {
+          honorsList.map((h) => (
+            <div class={`honor honor--${h.kind}`}>
+              <span class="honor__season">{h.season}</span>
+              <span class="honor__trophy">{h.trophy}</span>
+              <span class="honor__kind">
+                {h.kind === "champion"
+                  ? "champion"
+                  : h.kind === "third"
+                    ? "third place"
+                    : "semi-final"}
+              </span>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </section>
+
+
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="section__head">
+        <div>
+          <p class="label">Seasons · 赛季</p>
+          <h2 style="margin-top:10px">四个赛季</h2>
+        </div>
+        <a class="section__more" href="/seasons">赛季详情 →</a>
+      </div>
+
+      <table class="table">
+        <thead>
+          <tr>
+            <th>赛季</th>
+            <th class="num">场次</th>
+            <th class="num">名次</th>
+            <th>结果</th>
+          </tr>
+        </thead>
+        <tbody>
+          {
+            seasonsList.map((s) => (
+              <tr>
+                <td><a class="table__link" href={`/seasons/${s.id}`}>{s.label}</a></td>
+                <td class="num">{s.played ?? "—"}</td>
+                <td class="num">{s.rank ?? "—"}</td>
+                <td>{s.result}</td>
+              </tr>
+            ))
+          }
+        </tbody>
+      </table>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="section__head">
+        <div>
+          <p class="label">Squad · 名单</p>
+          <h2 style="margin-top:10px">{stats.players} 名球员</h2>
+        </div>
+        <a class="section__more" href="/squad">全部名单 →</a>
+      </div>
+
+      <div class="roster" style="border-bottom:1px solid var(--rule)">
+        {
+          preview.map((p) => (
+            <a class="player" href={`/squad/${p.number}`}>
+              <span class="player__row">
+                <span class="num player__num">{p.number}</span>
+                <span class="player__pos">{positionOf(p) ?? ""}</span>
+              </span>
+              <span class="player__name">{p.name}</span>
+            </a>
+          ))
+        }
+      </div>
+
+      {
+        rest > 0 && (
+          <p style="margin-top:18px">
+            <a class="section__more" href="/squad">
+              还有 {rest} 人 →
+            </a>
+          </p>
+        )
+      }
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="section__head">
+        <div>
+          <p class="label">Photos · 照片</p>
+          <h2 style="margin-top:10px">场上与场下</h2>
+        </div>
+        <a class="section__more" href="/photos">全部照片 →</a>
+      </div>
+
+      <div class="frames">
+        <figure class="figure figure--wide">
+          <img
+            class="figure__img"
+            style="object-position: center 62%"
+            src="/photos/image7-1600.webp"
+            alt="球员坐在草地上，背后是 99、88、77、66、55 号球衣"
+            width="1600"
+            height="1200"
+            loading="lazy"
+          />
+          <figcaption>赛后 · 草地上 · 99/88/77/66/55</figcaption>
+        </figure>
+        <figure class="figure">
+          <img
+            class="figure__img"
+            src="/photos/image18-800.webp"
+            style="object-position: center 22%"
+            alt="举起奖杯"
+            width="800"
+            height="1472"
+            loading="lazy"
+          />
+          <figcaption>捧杯 · {latest.label}</figcaption>
+        </figure>
+        <figure class="figure">
+          <img
+            class="figure__img"
+            src="/photos/image6-800.webp"
+            alt="夜里的全队合影"
+            width="800"
+            height="559"
+            loading="lazy"
+          />
+          <figcaption>夜里的合影</figcaption>
+        </figure>
+      </div>
+
+      <p class="note" style="margin-top:32px">
+        照片来自球队相册，球员姓名与照片的对应关系仍在整理，名单页暂不显示头像。
+      </p>
+    </div>
+  </section>
+</Base>

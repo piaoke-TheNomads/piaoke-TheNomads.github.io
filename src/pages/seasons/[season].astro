@@ -1,0 +1,107 @@
+---
+import Base from "../../layouts/Base.astro";
+import { seasonsList, honorsList, site } from "../../lib/data";
+
+export function getStaticPaths() {
+  return seasonsList.map((s) => ({ params: { season: s.id }, props: { season: s } }));
+}
+
+const { season } = Astro.props;
+const seasonHonors = honorsList.filter((h) => h.season === season.id);
+const i = seasonsList.findIndex((s) => s.id === season.id);
+const older = seasonsList[i + 1] ?? null; // 列表按赛季倒序，+1 是更早的赛季
+const newer = seasonsList[i - 1] ?? null;
+---
+
+<Base
+  title={`${season.label} 赛季`}
+  description={`球门飘客 ${season.label} 赛季：${season.result}。`}
+  active="seasons"
+>
+  <section class="wrap">
+    <div class="page-head">
+      <p class="label page-head__kicker">
+        <a href="/seasons">Seasons</a> / {season.label}
+      </p>
+      <div class="season-head">
+        <h1>{season.label} 赛季</h1>
+        <span class="season-head__result">{season.result}</span>
+      </div>
+    </div>
+
+    <div class="section section--tight">
+      <div class="stats">
+        <div class="stats__cell">
+          <span class="num stats__num">
+            {season.rank ?? "—"}
+          </span>
+          <p class="label stats__key">最终名次</p>
+        </div>
+        <div class="stats__cell">
+          <span class="num stats__num">{season.played ?? "—"}</span>
+          <p class="label stats__key">场次</p>
+        </div>
+        <div class="stats__cell">
+          <span class="num stats__num">{season.teams ?? "—"}</span>
+          <p class="label stats__key">参赛队</p>
+        </div>
+        <div class="stats__cell">
+          <span class="num stats__num">{seasonHonors.length}</span>
+          <p class="label stats__key">赛季荣誉</p>
+        </div>
+      </div>
+
+      <div class="grid" style="margin-top:clamp(30px,4vw,52px)">
+        <div style="grid-column: 1 / span 5">
+          <p class="label">Notes · 赛季记录</p>
+          <p class="prose" style="margin-top:14px">{season.note}</p>
+          <p class="note" style="margin-top:26px">
+            胜负与进失球需要逐场比分才能填，本页留空不显示 0。
+          </p>
+        </div>
+
+        <div style="grid-column: 7 / span 6">
+          <p class="label">Honors · 本赛季荣誉</p>
+          {
+            seasonHonors.length ? (
+              <div class="honor-list" style="margin-top:14px">
+                {seasonHonors.map((h) => (
+                  <div class={`honor honor--${h.kind}`}>
+                    <span class="honor__season">{h.season}</span>
+                    <span class="honor__trophy">{h.trophy}</span>
+                    <span class="honor__kind" />
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <p class="dim" style="margin-top:14px">
+                本赛季没有获奖记录。
+              </p>
+            )
+          }
+        </div>
+      </div>
+
+      <div class="pager" style="margin-top:clamp(30px,4vw,52px)">
+        {
+          older ? (
+            <a class="btn" href={`/seasons/${older.id}`}>
+              ← 上一个赛季 · {older.label}
+            </a>
+          ) : (
+            <a class="btn" href="/seasons">← 全部赛季</a>
+          )
+        }
+        {
+          newer ? (
+            <a class="btn" href={`/seasons/${newer.id}`}>
+              下一个赛季 · {newer.label} →
+            </a>
+          ) : (
+            <span class="btn btn--ghost" aria-hidden="true">已是最新赛季</span>
+          )
+        }
+      </div>
+    </div>
+  </section>
+</Base>

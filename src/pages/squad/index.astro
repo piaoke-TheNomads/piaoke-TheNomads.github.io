@@ -1,0 +1,56 @@
+---
+import Base from "../../layouts/Base.astro";
+import { roster, stats, positionOf } from "../../lib/data";
+
+const withPos = roster.filter((p) => p.position).length;
+const withPhoto = roster.filter((p) => p.photo).length;
+---
+
+<Base
+  title="名单"
+  description={`球门飘客 ${roster.length} 名在册球员的号码与姓名。`}
+  active="squad"
+>
+  <section class="wrap">
+    <div class="page-head">
+      <p class="label page-head__kicker">Squad · 名单</p>
+      <h1>{stats.players} 名球员</h1>
+      <p class="lede page-head__dek">
+        号码按从小到大排列。点进去看每个人的页面。
+      </p>
+    </div>
+
+    <div class="section section--tight">
+      <div class="roster">
+        {
+          roster.map((p) => (
+            <a class="player" href={`/squad/${p.number}`}>
+              <span class="player__row">
+                <span class="num player__num">{p.number}</span>
+                <span class="player__pos">{positionOf(p) ?? ""}</span>
+              </span>
+              <span class="player__name">{p.name}</span>
+              {p.photo ? (
+                <img
+                  class="player__thumb"
+                  src={`/photos/${p.photo}`}
+                  alt=""
+                  loading="lazy"
+                />
+              ) : null}
+            </a>
+          ))
+        }
+      </div>
+
+      {
+        withPos < roster.length || withPhoto < roster.length ? (
+          <p class="note" style="margin-top:32px">
+            位置已填 {withPos}/{roster.length}，照片已填 {withPhoto}/{roster.length}。
+            这两项由球队补，补齐后本页会自动显示。
+          </p>
+        ) : null
+      }
+    </div>
+  </section>
+</Base>

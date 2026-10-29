@@ -1,0 +1,55 @@
+---
+import Base from "../layouts/Base.astro";
+import { honorsList, championSeasons, stats } from "../lib/data";
+
+const kindLabel = {
+  champion: "champion",
+  third: "third place",
+  semifinal: "semi-final",
+};
+---
+
+<Base
+  title="荣誉"
+  description={`球门飘客历届荣誉：${honorsList.length} 项。`}
+  active="honors"
+>
+  <section class="wrap">
+    <div class="page-head">
+      <p class="label page-head__kicker">Honors · 荣誉</p>
+      <h1>{honorsList.length} 项荣誉</h1>
+      <p class="lede page-head__dek">
+        {stats.seasons} 个赛季，{stats.stars} 个冠军赛季。队徽上的星星按冠军赛季计。
+      </p>
+    </div>
+
+    <div class="section section--tight">
+      <div class="stars">
+        {
+          championSeasons.map((s) => (
+            <span class="star">
+              <span class="star__glyph">★</span>
+              <span class="label">{s}</span>
+            </span>
+          ))
+        }
+      </div>
+
+      <div class="honor-list" style="margin-top:clamp(30px,4vw,52px)">
+        {
+          honorsList.map((h) => (
+            <div class={`honor honor--${h.kind}`}>
+              <span class="honor__season">{h.season}</span>
+              <span class="honor__trophy">{h.trophy}</span>
+              <span class="honor__kind">{kindLabel[h.kind] ?? h.kind}</span>
+            </div>
+          ))
+        }
+      </div>
+
+      <p class="note" style="margin-top:32px">
+        荣誉来自球队 PPT 的荣誉页，赛事全称以球队登记为准，未确认的不写。
+      </p>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,131 @@
+---
+import "../styles/global.css";
+import { site, nav } from "../lib/data";
+
+const { title, description, active, image } = Astro.props;
+const pageTitle = title ? `${title} · ${site.name}` : `${site.name} ${site.nameEn}`;
+const desc = description ?? site.description;
+const canonical = new URL(Astro.url.pathname, Astro.site);
+const ogImage = new URL(image ?? "/crest/crest-square.png", Astro.site);
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "SportsTeam",
+  name: site.name,
+  alternateName: site.nameEn,
+  url: Astro.site?.toString(),
+  logo: new URL("/crest/crest-256.png", Astro.site).toString(),
+  image: new URL("/photos/image1-1600.webp", Astro.site).toString(),
+  foundingDate: String(site.est),
+  sport: "Football",
+  slogan: site.slogan,
+  address: {
+    "@type": "PostalAddress",
+    addressLocality: site.city,
+    addressCountry: "CN",
+  },
+};
+---
+
+<!doctype html>
+<html lang="zh-CN">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>{pageTitle}</title>
+    <meta name="description" content={desc} />
+    <link rel="canonical" href={canonical} />
+    <link rel="icon" href="/favicon.png" type="image/png" />
+    <link rel="apple-touch-icon" href="/crest/crest-256.png" />
+    <link
+      rel="preload"
+      href="/fonts/BarlowCondensed-600-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <link
+      rel="preload"
+      href="/fonts/Newsreader-400-latin.woff2"
+      as="font"
+      type="font/woff2"
+      crossorigin
+    />
+    <meta name="theme-color" content="#faf8f4" />
+    <meta name="generator" content={Astro.generator} />
+
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content={site.name} />
+    <meta property="og:title" content={pageTitle} />
+    <meta property="og:description" content={desc} />
+    <meta property="og:image" content={ogImage} />
+    <meta property="og:locale" content="zh_CN" />
+    <meta name="twitter:card" content="summary_large_image" />
+    <script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+  </head>
+  <body>
+    <a class="skip" href="#main">跳到正文</a>
+
+    <header class="masthead">
+      <div class="wrap masthead__inner">
+        <a class="brand" href="/" aria-label={`${site.name} 首页`}>
+          <img src="/crest/crest-256.webp" width="30" height="30" alt="" />
+          <span>
+            <span class="brand__cn">{site.name}</span>
+            <span class="brand__en">{site.nameEn}</span>
+          </span>
+        </a>
+
+        <nav class="nav" aria-label="主导航">
+          {
+            nav.map((item) => (
+              <a
+                href={item.href}
+                aria-current={active === item.key ? "page" : undefined}
+              >
+                {item.label}
+              </a>
+            ))
+          }
+        </nav>
+      </div>
+    </header>
+
+    <main id="main">
+      <slot />
+    </main>
+
+    <footer class="footer">
+      <div class="wrap">
+        <div class="footer__grid">
+          <div class="footer__brand">
+            <img src="/crest/crest-256.webp" width="52" height="52" alt="" />
+            <div>
+              <div class="footer__name">{site.name}</div>
+              <p class="label" style="margin-top:6px">
+                {site.nameEn} · EST. {site.est}
+              </p>
+            </div>
+          </div>
+
+          <div class="footer__col">
+            <h4>站点</h4>
+            {nav.map((item) => <a href={item.href}>{item.label}</a>)}
+          </div>
+
+          <div class="footer__col">
+            <h4>球队</h4>
+            <p>{site.city} · {site.school}</p>
+            <p>{site.league}</p>
+            <p class="label" style="margin-top:10px">数据更新 {site.updated}</p>
+          </div>
+        </div>
+
+        <div class="footer__bottom">
+          <span>© {new Date().getFullYear()} {site.name} {site.abbr}</span>
+          <span>{site.slogan}</span>
+        </div>
+      </div>
+    </footer>
+  </body>
+</html>

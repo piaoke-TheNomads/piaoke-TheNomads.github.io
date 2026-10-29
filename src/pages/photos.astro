@@ -1,0 +1,103 @@
+---
+import Base from "../layouts/Base.astro";
+import { album, albumItems } from "../lib/data";
+
+const title = "相册";
+// 三列瀑布流：按序轮转分配，避免 CSS 多列的“拉平”留白
+const COLS = 3;
+const columns = Array.from({ length: COLS }, (_, c) =>
+  albumItems.filter((_, i) => i % COLS === c)
+);
+---
+
+<Base title={title} active="photos" description="球门飘客的比赛、合影与奖杯。">
+  <section class="page-head">
+    <div class="wrap">
+      <p class="label">Album · 相册</p>
+      <h1>{albumItems.length} 张照片</h1>
+      <p class="page-head__lede">{album.note}</p>
+    </div>
+  </section>
+
+  <section class="section section--tight">
+    <div class="wrap">
+      <div class="album">
+        {
+          columns.map((col) => (
+            <div class="album-col">
+              {col.map((item) => (
+                <button
+                  class="album__item"
+                  type="button"
+                  data-src={`/photos/${item.file}`}
+                  data-caption={item.caption}
+                  aria-label={`查看大图：${item.caption}`}
+                >
+                  <img
+                    src={`/photos/${item.file}`}
+                    width={item.w}
+                    height={item.h}
+                    alt={item.caption}
+                    loading="lazy"
+                    decoding="async"
+                  />
+                  <span class="album__cap">{item.caption}</span>
+                </button>
+              ))}
+            </div>
+          ))
+        }
+      </div>
+
+      <p class="note" style="margin-top:36px">
+        还有 7 张抠好的人像没有放上来——它们是球员的半身像，等人名与面孔对上号之后会出现在各自球员页。
+      </p>
+    </div>
+  </section>
+
+  <dialog class="lightbox" id="lightbox">
+    <div class="lightbox__inner">
+      <button class="lightbox__close" type="button" aria-label="关闭">×</button>
+      <img class="lightbox__img" alt="" />
+      <div class="lightbox__bar">
+        <span class="lightbox__cap"></span>
+        <span class="label" id="lightbox-count"></span>
+      </div>
+    </div>
+  </dialog>
+</Base>
+
+<script>
+  const dialog = document.getElementById("lightbox") as HTMLDialogElement;
+  const img = dialog.querySelector(".lightbox__img") as HTMLImageElement;
+  const cap = dialog.querySelector(".lightbox__cap") as HTMLElement;
+  const count = document.getElementById("lightbox-count") as HTMLElement;
+  const buttons = [...document.querySelectorAll<HTMLButtonElement>(".album__item")];
+  let current = 0;
+
+  function show(i: number) {
+    current = (i + buttons.length) % buttons.length;
+    const b = buttons[current];
+    img.src = b.dataset.src!;
+    img.alt = b.dataset.caption!;
+    cap.textContent = b.dataset.caption!;
+    count.textContent = `${current + 1} / ${buttons.length}`;
+  }
+
+  buttons.forEach((b, i) => {
+    b.addEventListener("click", () => {
+      show(i);
+      dialog.showModal();
+    });
+  });
+
+  dialog.querySelector(".lightbox__close")!.addEventListener("click", () => dialog.close());
+  dialog.addEventListener("click", (e) => {
+    if (e.target === dialog) dialog.close();
+  });
+  document.addEventListener("keydown", (e) => {
+    if (!dialog.open) return;
+    if (e.key === "ArrowRight") show(current + 1);
+    if (e.key === "ArrowLeft") show(current - 1);
+  });
+</script>

@@ -1,0 +1,117 @@
+---
+import Base from "../../layouts/Base.astro";
+import { roster, positionOf, photoUrl, site } from "../../lib/data";
+
+export function getStaticPaths() {
+  return roster.map((p, i) => ({
+    params: { number: String(p.number) },
+    props: {
+      player: p,
+      prev: roster[i - 1] ?? null,
+      next: roster[i + 1] ?? null,
+      mates: [...roster.slice(Math.max(0, i - 3), i), ...roster.slice(i + 1, i + 4)],
+    },
+  }));
+}
+
+const { player, prev, next, mates } = Astro.props;
+const pos = positionOf(player);
+const img = photoUrl(player);
+---
+
+<Base
+  title={`${player.number} ${player.name}`}
+  description={`${site.name} ${player.number} 号 ${player.name}${pos ? `，${pos}` : ""}。`}
+  active="squad"
+>
+  <section class="wrap">
+    <div class="page-head">
+      <p class="label page-head__kicker">
+        <a href="/squad">Squad</a> / {String(player.number).padStart(2, "0")}
+      </p>
+      <div class="player-head">
+        <span class="num player-head__num">{player.number}</span>
+        <div>
+          <h1>{player.name}</h1>
+          <p class="label" style="margin-top:12px">
+            {pos ?? "位置待补"}
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <div class="section section--tight grid">
+      <div style="grid-column: 1 / span 5">
+        {
+          img ? (
+            <img class="player-portrait" src={img} alt={`${player.name}`} />
+          ) : (
+            <div class="player-portrait player-portrait--empty">
+              <span class="num player-portrait__num">{player.number}</span>
+              <span class="label">照片待补</span>
+            </div>
+          )
+        }
+      </div>
+
+      <div style="grid-column: 7 / span 6" class="stack">
+        <table class="table table--kv">
+          <tbody>
+            <tr>
+              <th scope="row">号码</th>
+              <td class="num">{player.number}</td>
+            </tr>
+            <tr>
+              <th scope="row">位置</th>
+              <td>{pos ?? <span class="pending">待补</span>}</td>
+            </tr>
+            <tr>
+              <th scope="row">加入年份</th>
+              <td>{player.joined ?? <span class="pending">待补</span>}</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="pager">
+          {
+            prev ? (
+              <a class="pager__link" href={`/squad/${prev.number}`}>
+                <span class="label">上一位</span>
+                <span class="pager__name">{prev.number} {prev.name}</span>
+              </a>
+            ) : (
+              <span />
+            )
+          }
+          {
+            next ? (
+              <a class="pager__link pager__link--next" href={`/squad/${next.number}`}>
+                <span class="label">下一位</span>
+                <span class="pager__name">{next.number} {next.name}</span>
+              </a>
+            ) : (
+              <span />
+            )
+          }
+        </div>
+      </div>
+    </div>
+
+    <div class="section section--tight">
+      <p class="label">Teammates · 队友</p>
+      <div class="chips" style="margin-top:14px">
+        {
+          mates.map((m) => (
+            <a class="chip" href={`/squad/${m.number}`}>
+              <span class="chip__n">{m.number}</span>
+              <span>{m.name}</span>
+            </a>
+          ))
+        }
+        <a class="chip" href="/squad">
+          <span>全部名单 →</span>
+        </a>
+      </div>
+    </div>
+  </section>
+</Base>

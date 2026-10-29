@@ -1,0 +1,10 @@
+{
+  "note": "冠亚季与四强来自球队 PPT 的荣誉页；具体赛事名以球队登记为准，未确认的字段留空。",
+  "honors": [
+    { "season": "2025-26", "trophy": "冠军", "kind": "champion", "competition": "" },
+    { "season": "2024-25", "trophy": "季军", "kind": "third", "competition": "" },
+    { "season": "2023-24", "trophy": "四强", "kind": "semifinal", "competition": "" },
+    { "season": "2022-23", "trophy": "季后赛冠军", "kind": "champion", "competition": "" },
+    { "season": "2022-23", "trophy": "常规赛冠军", "kind": "champion", "competition": "" }
+  ]
+}

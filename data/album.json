@@ -1,0 +1,82 @@
+{
+  "note": "球队相册。拍摄时间与赛事未逐一标注，命名以画面内容为准。",
+  "items": [
+    {
+      "file": "image1-1600.webp",
+      "w": 1600,
+      "h": 955,
+      "caption": "全队合影",
+      "group": "合影"
+    },
+    {
+      "file": "image5-1600.webp",
+      "w": 1600,
+      "h": 881,
+      "caption": "赛前合影",
+      "group": "合影"
+    },
+    {
+      "file": "image7-1600.webp",
+      "w": 1600,
+      "h": 1200,
+      "caption": "草地上 · 99/88/77/66/55",
+      "group": "合影"
+    },
+    {
+      "file": "image6-800.webp",
+      "w": 800,
+      "h": 559,
+      "caption": "夜里的合影",
+      "group": "合影"
+    },
+    {
+      "file": "image8-800.webp",
+      "w": 800,
+      "h": 518,
+      "caption": "夜里的合影",
+      "group": "合影"
+    },
+    {
+      "file": "image13-800.webp",
+      "w": 800,
+      "h": 765,
+      "caption": "奖杯墙前",
+      "group": "奖杯"
+    },
+    {
+      "file": "image18-800.webp",
+      "w": 800,
+      "h": 1472,
+      "caption": "捧杯",
+      "group": "奖杯"
+    },
+    {
+      "file": "image3-800.webp",
+      "w": 800,
+      "h": 1719,
+      "caption": "奖杯",
+      "group": "奖杯"
+    },
+    {
+      "file": "image4-800.webp",
+      "w": 800,
+      "h": 1717,
+      "caption": "奖杯",
+      "group": "奖杯"
+    },
+    {
+      "file": "image17-800.webp",
+      "w": 800,
+      "h": 1229,
+      "caption": "教练",
+      "group": "场边"
+    },
+    {
+      "file": "image2-1600.webp",
+      "w": 1600,
+      "h": 1061,
+      "caption": "队徽",
+      "group": "场边"
+    }
+  ]
+}
